@@ -121,7 +121,11 @@ export function AboutCarousel({
     <section
       aria-roledescription="carousel"
       aria-label={t("galleryLabel")}
-      className="relative"
+      // flex + h-full so it can fill the height of a taller sibling column
+      // on the About page's two-up hero grid (see about/page.tsx); on its
+      // own, with no such sibling, this collapses to the image's own
+      // aspect-ratio height, same as before.
+      className="relative flex h-full flex-col"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -132,7 +136,13 @@ export function AboutCarousel({
         tabIndex={0}
         onKeyDown={onKeyDown}
         aria-live={running ? "off" : "polite"}
-        className="zoom-frame relative aspect-[21/9] max-h-[280px] overflow-hidden rounded-2xl border border-rule bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        // aspect-[4/3] is the fallback when nothing sets this column's
+        // height (stacked mobile layout); md:aspect-auto + flex-1 let it
+        // fill the row's height instead once there's a text column beside
+        // it to match. Previously aspect-[21/9] with a max-height cap —
+        // right for a full-width banner, wrong once this sits in a column
+        // next to text, where it read as an odd letterboxed strip.
+        className="zoom-frame relative aspect-[4/3] flex-1 overflow-hidden rounded-2xl border border-rule bg-surface-2 md:aspect-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {slides.map((s, i) => (
           <div
