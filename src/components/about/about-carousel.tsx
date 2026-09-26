@@ -132,7 +132,7 @@ export function AboutCarousel({
         tabIndex={0}
         onKeyDown={onKeyDown}
         aria-live={running ? "off" : "polite"}
-        className="zoom-frame relative aspect-[21/9] max-h-[420px] overflow-hidden rounded-2xl border border-rule bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="zoom-frame relative aspect-[21/9] max-h-[280px] overflow-hidden rounded-2xl border border-rule bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {slides.map((s, i) => (
           <div

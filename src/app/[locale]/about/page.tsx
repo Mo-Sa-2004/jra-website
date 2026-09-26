@@ -112,7 +112,7 @@ export default async function AboutPage({
               allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               referrerPolicy="strict-origin-when-cross-origin"
-              className="aspect-[21/9] max-h-[420px] w-full border-0"
+              className="aspect-[21/9] max-h-[280px] w-full border-0"
             />
           </div>
         </section>
