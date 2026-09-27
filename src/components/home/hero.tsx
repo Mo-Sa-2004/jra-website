@@ -1,66 +1,54 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { HeroSearch } from "@/components/home/hero-search";
-import { ImageStreamHero } from "@/components/ui/image-stream-hero";
 
 /**
  * Homepage hero.
  *
  * The previous version was a white card floating over a blurred backdrop, with
  * the association described in prose and two buttons beneath it. It told you
- * JRA represents Jordan's restaurants. This shows them: a corridor of real
- * member photography running toward the viewer, search as the primary action,
- * and the cuisine strip doing double duty as proof of range and as navigation.
+ * JRA represents Jordan's restaurants. This shows them: real member
+ * photography beside the text, search as the primary action, and the cuisine
+ * strip doing double duty as proof of range and as navigation.
+ *
+ * The right side was originally a moving 3D corridor of photos rushing toward
+ * the viewer. It looked striking at full hero width but cramped once boxed
+ * into a column next to the text — a motion effect built for filling a whole
+ * screen doesn't shrink gracefully into a frame. This replaces it with a
+ * static collage of the same real member photography: same promise, no
+ * effect that needs a lot of room to read as intentional rather than
+ * squeezed.
  *
  * Dark ground on purpose — food photography reads better against it, and it
  * gives the page a distinct opening register before settling into the light
  * editorial layout below.
  *
- * Governorates were the first candidate for the strip, but three of them hold
- * no restaurants and 288 listings have none assigned, so it would have
- * advertised the gap rather than the reach. Cuisine covers 78% and spreads
- * properly.
+ * Governorates were the first candidate for the cuisine strip, but three of
+ * them hold no restaurants and 288 listings have none assigned, so it would
+ * have advertised the gap rather than the reach. Cuisine covers 78% and
+ * spreads properly.
  */
 
 export type HeroCuisine = { slug: string; label: string; count: number };
-
-/**
- * The corridor renders plain <img> rather than next/image, so nothing resizes
- * these for us. Eighteen full-resolution restaurant photos would be several
- * megabytes on first paint; the cards are ~18% of the container's width, so a
- * 420px derivative is already more than enough. Cloudinary does the work in
- * the URL. Non-Cloudinary sources (local dev uploads) pass through untouched.
- */
-function thumb(url: string): string {
-  const marker = "/image/upload/";
-  const at = url.indexOf(marker);
-  if (at === -1) return url;
-  const head = url.slice(0, at + marker.length);
-  const tail = url.slice(at + marker.length);
-  return `${head}w_420,h_560,c_fill,g_auto,q_auto,f_auto/${tail}`;
-}
 
 export async function HomeHero({
   images,
   cuisines,
   restaurantCount,
+  totalMembers,
 }: {
   images: { url: string; alt: string }[];
   cuisines: HeroCuisine[];
   restaurantCount: number;
+  totalMembers: number;
 }) {
   const t = await getTranslations("home");
 
-  const stream = images.map((i) => ({ src: thumb(i.url), alt: i.alt }));
+  const [main, sideA, sideB] = images;
 
   return (
-    // Flat navy ground rather than the corridor itself being the hero's
-    // full-bleed background. The corridor now lives in its own framed panel
-    // in the right column below — running the full photography behind the
-    // text was drowning the heading and search out on wide screens, and
-    // needed two full-hero scrim gradients just to keep the text readable
-    // over whatever happened to be moving behind it. A flat background needs
-    // no scrim at all, which is why both are gone.
     <div className="bg-canvas-deep">
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-16 pt-24 sm:px-6 md:px-8 sm:pb-20 sm:pt-36 lg:grid-cols-12 lg:gap-8 lg:pt-32">
         <div className="lg:col-span-7">
@@ -96,26 +84,67 @@ export async function HomeHero({
           </div>
         </div>
 
-        {/* The corridor's own frame. It scales itself to whatever container
-            it's given — every length inside is `cqw`, a percentage of this
-            box's width — so shrinking it to a column here shrinks the whole
-            effect with it rather than cropping a full-size one. The mask
-            fades the top and bottom edges rather than letting cards appear
-            and disappear on a hard line. */}
-        <div className="animate-editorial-rise lg:col-span-5" style={{ animationDelay: "200ms" }}>
-          <div className="relative h-[380px] overflow-hidden rounded-2xl border border-white/10 [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] sm:h-[420px]">
-            <ImageStreamHero
-              images={stream}
-              // Fewer, larger cards than the old full-bleed version (was 9) —
-              // a dense corridor read as texture at full width; the same
-              // density in a column this narrow reads as clutter.
-              cards={5}
-              speed={26}
-              axis={50}
-              className="h-full w-full"
-            />
+        {/* Real member photography as a static collage — one large frame and,
+            when there are enough photos to fill them without repeating, two
+            smaller ones underneath. Falls back gracefully with fewer images:
+            just the large frame, or nothing at all rather than an empty box. */}
+        {main ? (
+          <div className="animate-editorial-rise lg:col-span-5" style={{ animationDelay: "200ms" }}>
+            <div className="relative h-[260px] w-full overflow-hidden rounded-2xl border border-white/10">
+              <Image
+                src={main.url}
+                alt={main.alt}
+                fill
+                sizes="(min-width: 1024px) 38vw, 90vw"
+                className="object-cover"
+                priority
+              />
+              {/* Floating badge — real figures (member count, classified
+                  restaurants), not a generic star rating: there's no
+                  crowd-review system behind this site to back one up, only
+                  JRA's own classification, which the directory already shows
+                  per restaurant. */}
+              <div className="absolute bottom-3 start-3 flex items-center gap-2 rounded-xl border border-white/30 bg-white/85 px-3 py-2 backdrop-blur-md">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-xs leading-tight text-ink">
+                  <span className="block font-display font-semibold text-sm">
+                    {totalMembers}+ {t("statMembers")}
+                  </span>
+                  <span className="block text-ink-soft">
+                    {restaurantCount} {t("statRestaurants")}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {sideA || sideB ? (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {[sideA, sideB].map((img, i) =>
+                  img ? (
+                    <div
+                      key={img.url}
+                      className="relative h-[140px] overflow-hidden rounded-2xl border border-white/10"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.alt}
+                        fill
+                        sizes="(min-width: 1024px) 19vw, 45vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    // Odd photo count: an empty rounded frame reads as an
+                    // intentional gap in an editorial grid, not a broken tile.
+                    <div key={`empty-${i}`} className="rounded-2xl border border-white/10" />
+                  ),
+                )}
+              </div>
+            ) : null}
           </div>
-        </div>
+        ) : null}
 
         {/* Cuisine strip — the structural device. Real counts, and every item
             is a working filter rather than decoration. Full-width, below
