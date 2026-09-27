@@ -23,11 +23,30 @@ export type Stat = {
  * translated ones. Passing the figures in as data is what stops that: a new
  * one is a line in an array, not another copy of the markup.
  */
-export function StatGrid({ stats, className }: { stats: Stat[]; className?: string }) {
+export function StatGrid({
+  stats,
+  className,
+  variant = "plain",
+}: {
+  stats: Stat[];
+  className?: string;
+  /**
+   * "plain" is the homepage's rule-separated band, unchanged. "card" wraps
+   * each figure in its own bordered panel — for a page where the numbers
+   * are their own section rather than a strip crossing the full page (the
+   * About page, so far).
+   */
+  variant?: "plain" | "card";
+}) {
   return (
     <div className={cx("grid gap-8 text-center", className)}>
       {stats.map(({ value, label, suffix, animate = true }) => (
-        <div key={label}>
+        <div
+          key={label}
+          className={cx(
+            variant === "card" && "rounded-2xl border border-rule bg-surface p-6 sm:p-8"
+          )}
+        >
           <div className="font-display text-4xl font-semibold text-accent">
             {animate ? <CountUp value={value} suffix={suffix} /> : value}
           </div>

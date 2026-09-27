@@ -67,18 +67,28 @@ export default async function AboutPage({
   ];
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <header className="max-w-3xl">
-        <p className="ui-caps font-semibold text-accent">{tAbout("kicker")}</p>
-        <h1 className={cx("mt-2", ui.pageTitle)}>{t("about")}</h1>
-        <p className="mt-5 text-lg leading-relaxed text-ink-soft">{tAbout("intro")}</p>
-      </header>
+    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+      {/* Intro copy sits beside the carousel rather than above it — a
+          full-width paragraph with a wide banner orphaned underneath it read
+          as two unrelated blocks instead of one hero. Falls back to a single
+          centred column when there are no slides to pair it with. */}
+      <div
+        className={cx(
+          "grid grid-cols-1 gap-10 md:gap-14",
+          // items-stretch is the grid default, spelled out here because the
+          // carousel column relies on it: see about-carousel.tsx.
+          slides.length > 0 && "md:grid-cols-2 md:items-stretch"
+        )}
+      >
+        <header
+          className={cx("flex flex-col justify-center", slides.length === 0 && "max-w-3xl")}
+        >
+          <p className="ui-caps font-semibold text-accent">{tAbout("kicker")}</p>
+          <h1 className={cx("mt-2", ui.pageTitle)}>{t("about")}</h1>
+          <p className="mt-5 text-lg leading-relaxed text-ink-soft">{tAbout("intro")}</p>
+        </header>
 
-      {/* The carousel leads. A page about an association of 1,300 members that
-          opens with a wall of text is not describing the same organisation the
-          photographs do. */}
-      {slides.length > 0 ? (
-        <div className="mt-10">
+        {slides.length > 0 ? (
           <AboutCarousel
             slides={slides.map((s) => ({
               id: s.id,
@@ -87,23 +97,29 @@ export default async function AboutPage({
             }))}
             intervalMs={clampSlideSeconds(settings?.aboutSlideSeconds) * 1000}
           />
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {/* Real numbers, computed rather than typed. The old jra.jo shipped four
-          counters all reading zero. */}
+          counters all reading zero. Each gets its own card here rather than
+          the plain rule-separated band the homepage uses — on this page the
+          figures are their own section, not a strip crossing the full page. */}
       <StatGrid
-        className="mt-14 border-y border-rule py-10 sm:grid-cols-3"
+        variant="card"
+        className="mt-20 grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6"
         stats={stats}
       />
 
       {video ? (
-        <section className="mt-14">
+        <section className="mt-20">
           <h2 className="flex items-center gap-2 font-display font-semibold text-2xl text-ink">
             <PlayCircle className="h-5 w-5 text-accent" aria-hidden="true" />
             {tAbout("videoTitle")}
           </h2>
-          <div className="mt-5 overflow-hidden rounded-2xl border border-rule bg-surface-2">
+          {/* A real 16:9 box with a width cap, rather than reusing the
+              carousel's wide aspect ratio — that stretched the player far
+              past a sensible video width, with black bars down both sides. */}
+          <div className="mx-auto mt-5 aspect-video max-w-4xl overflow-hidden rounded-2xl border border-rule bg-surface-2">
             {/* Lazy: the page should not fetch a player nobody scrolled to. */}
             <iframe
               src={video.src}
@@ -112,16 +128,16 @@ export default async function AboutPage({
               allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               referrerPolicy="strict-origin-when-cross-origin"
-              className="aspect-[21/9] w-full border-0"
+              className="h-full w-full border-0"
             />
           </div>
         </section>
       ) : null}
 
       {board.length > 0 && (
-        <section className="mt-16">
+        <section className="mt-20 border-t border-rule pt-16">
           <h2 className="font-display font-semibold text-2xl text-ink">{t("aboutBoard")}</h2>
-          <div className="stagger mt-8 grid gap-6 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="stagger mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-6">
             {board.map((p) => (
               <div key={p.id} className="group text-center">
                 <div className="zoom-frame relative mx-auto h-24 w-24 overflow-hidden rounded-full border border-rule bg-surface-2">
@@ -153,7 +169,7 @@ export default async function AboutPage({
       )}
 
       {staff.length > 0 && (
-        <section className="mt-16">
+        <section className="mt-20">
           <h2 className="font-display font-semibold text-2xl text-ink">{t("aboutTeam")}</h2>
           <div className="stagger mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {staff.map((p) => (
@@ -197,7 +213,7 @@ export default async function AboutPage({
       )}
 
       {reports.length > 0 && (
-        <section className="mt-16">
+        <section className="mt-20">
           <h2 className="font-display font-semibold text-2xl text-ink">{t("aboutReports")}</h2>
           <div className="stagger mt-8 grid gap-4 sm:grid-cols-2">
             {reports.map((r) => (
