@@ -54,36 +54,16 @@ export async function HomeHero({
   const stream = images.map((i) => ({ src: thumb(i.url), alt: i.alt }));
 
   return (
-    <ImageStreamHero
-      images={stream}
-      // Seven per rail rather than the default nine: these are photographs of
-      // real venues, and a denser corridor turns them into texture.
-      cards={7}
-      speed={26}
-      axis={48}
-      className="bg-canvas-deep"
-    >
-      {/* Scrim. A floor that settles the corridor into the ground, and a
-          directional wash keeping the text side dark wherever the photography
-          runs bright. The ground is a brand-derived navy rather than near
-          black, and lighter again after the first pass read heavy — white body copy
-          still measures 13.0:1 on it, and the faintest tier 5.5:1, but it reads as
-          a colour rather than an absence of one. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-canvas-deep via-canvas-deep/80 to-canvas-deep/40"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-canvas-deep via-canvas-deep/75 to-transparent rtl:bg-gradient-to-l"
-      />
-      {/* No bottom fade here any more. The page wraps the hero and the
-          services grid in one container that owns the whole navy-to-paper
-          transition, so a second fade at the hero's edge would have punched
-          a light band into the middle of it. */}
-
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 md:px-8 sm:pb-20 sm:pt-36 lg:pt-44">
-        <div className="max-w-2xl">
+    // Flat navy ground rather than the corridor itself being the hero's
+    // full-bleed background. The corridor now lives in its own framed panel
+    // in the right column below — running the full photography behind the
+    // text was drowning the heading and search out on wide screens, and
+    // needed two full-hero scrim gradients just to keep the text readable
+    // over whatever happened to be moving behind it. A flat background needs
+    // no scrim at all, which is why both are gone.
+    <div className="bg-canvas-deep">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-16 pt-24 sm:px-6 md:px-8 sm:pb-20 sm:pt-36 lg:grid-cols-12 lg:gap-8 lg:pt-32">
+        <div className="lg:col-span-7">
           <p
             className="animate-editorial-rise text-xs font-semibold uppercase tracking-[0.2em] text-brass"
             style={{ animationDelay: "80ms" }}
@@ -95,7 +75,7 @@ export async function HomeHero({
               tracking is left alone in RTL. The Latin side uses Fraunces —
               already loaded for the system and, until now, barely used. */}
           <h1
-            className="animate-editorial-rise mt-5 font-editorial text-[clamp(2.4rem,6vw,4.5rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-white rtl:font-display rtl:leading-[1.3] rtl:tracking-normal"
+            className="animate-editorial-rise mt-5 font-editorial text-[clamp(2.4rem,5vw,4.5rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-white rtl:font-display rtl:leading-[1.35] rtl:tracking-normal"
             style={{ animationDelay: "160ms" }}
           >
             {t("heroTitle")}
@@ -116,12 +96,34 @@ export async function HomeHero({
           </div>
         </div>
 
+        {/* The corridor's own frame. It scales itself to whatever container
+            it's given — every length inside is `cqw`, a percentage of this
+            box's width — so shrinking it to a column here shrinks the whole
+            effect with it rather than cropping a full-size one. The mask
+            fades the top and bottom edges rather than letting cards appear
+            and disappear on a hard line. */}
+        <div className="animate-editorial-rise lg:col-span-5" style={{ animationDelay: "200ms" }}>
+          <div className="relative h-[380px] overflow-hidden rounded-2xl border border-white/10 [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)] sm:h-[420px]">
+            <ImageStreamHero
+              images={stream}
+              // Fewer, larger cards than the old full-bleed version (was 9) —
+              // a dense corridor read as texture at full width; the same
+              // density in a column this narrow reads as clutter.
+              cards={5}
+              speed={26}
+              axis={50}
+              className="h-full w-full"
+            />
+          </div>
+        </div>
+
         {/* Cuisine strip — the structural device. Real counts, and every item
-            is a working filter rather than decoration. */}
+            is a working filter rather than decoration. Full-width, below
+            both columns, rather than squeezed into the text column alone. */}
         {cuisines.length > 0 ? (
           <nav
             aria-label={t("browseByCuisine")}
-            className="animate-editorial-rise mt-12 border-t border-white/15 pt-6 sm:mt-16"
+            className="animate-editorial-rise border-t border-white/15 pt-6 lg:col-span-12"
             style={{ animationDelay: "400ms" }}
           >
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
@@ -147,6 +149,6 @@ export async function HomeHero({
           </nav>
         ) : null}
       </div>
-    </ImageStreamHero>
+    </div>
   );
 }
