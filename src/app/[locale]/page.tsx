@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   Store,
@@ -52,7 +53,16 @@ export default async function HomePage({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
       take: 3,
-      include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
+      select: {
+        id: true,
+        slug: true,
+        publishedAt: true,
+        coverImageUrl: true,
+        translations: {
+          where: { locale: locale === "ar" ? "ar" : "en" },
+          select: { title: true, excerpt: true },
+        },
+      },
     }),
     // Hero corridor: real member photography rather than stock. One image per
     // restaurant so the same venue never appears twice on a rail. Fourteen
@@ -146,7 +156,7 @@ export default async function HomePage({
       {/* Sector services — inside the dark half of the fade, so the heading
           is light and the cards keep their own solid surface rather than
           going translucent, which would drag their text onto the navy. */}
-      <section className="mx-auto max-w-6xl px-4 pb-28 pt-16 sm:px-6 sm:pb-36">
+      <section className="mx-auto max-w-7xl px-4 pb-28 pt-16 sm:px-6 md:px-8 sm:pb-36">
         <h2 className="font-display font-semibold text-4xl text-white">
           {t("servicesTitle")}
         </h2>
@@ -157,7 +167,9 @@ export default async function HomePage({
               href={s.href}
               className="motion-card group rounded-2xl border border-rule bg-surface p-6 sm:p-8"
             >
-              <s.icon className="h-6 w-6 text-accent" strokeWidth={1.75} />
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
+                <s.icon className="h-6 w-6 text-accent" strokeWidth={1.75} />
+              </span>
               <h3 className="mt-4 font-display font-semibold text-2xl text-ink">
                 {s.title}
               </h3>
@@ -175,7 +187,9 @@ export default async function HomePage({
       {/* Stats */}
       <section className="border-y border-rule">
         <StatGrid
-          className="mx-auto max-w-6xl grid-cols-2 px-4 py-12 sm:grid-cols-4 sm:px-6"
+          // divide-x rather than a border per card: four numbers reading as
+          // one strip of figures, not four boxes competing for attention.
+          className="mx-auto max-w-7xl grid-cols-2 divide-x divide-rule px-4 py-12 sm:grid-cols-4 sm:px-6 md:px-8 rtl:divide-x-reverse"
           stats={[
             { value: totalMembers, label: t("statMembers"), suffix: "+" },
             { value: restaurantCount, label: t("statRestaurants") },
@@ -187,28 +201,37 @@ export default async function HomePage({
 
       {/* Featured restaurants */}
       {featured.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="flex items-end justify-between">
-            <h2 className="font-display font-semibold text-4xl text-ink">
-              {t("serviceDirectory")}
-            </h2>
-            <Link href="/restaurants" className="text-sm font-medium text-accent">
-              {tCommon("viewAll")} →
-            </Link>
-          </div>
-          <div className="stagger mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {featured.map((r) => (
-              <div key={r.slug}>
-                <RestaurantCard restaurant={r} />
-              </div>
-            ))}
+        // The section gets its own panel — a visibly distinct "shelf" for the
+        // cards, using the same border/surface pair as every other card on
+        // the site rather than a drop shadow (flat design system; see the
+        // About page and restaurant-card.tsx for the same note). And 3
+        // columns rather than 4: 6 featured restaurants divide evenly into
+        // two full rows of 3, where 4 columns left the second row two cards
+        // short — the abrupt gap on the right on wide screens.
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
+          <div className="rounded-3xl border border-rule bg-surface-2 p-6 sm:p-8 md:p-10">
+            <div className="flex items-end justify-between">
+              <h2 className="font-display font-semibold text-4xl text-ink">
+                {t("serviceDirectory")}
+              </h2>
+              <Link href="/restaurants" className="text-sm font-medium text-accent">
+                {tCommon("viewAll")} →
+              </Link>
+            </div>
+            <div className="stagger mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((r) => (
+                <div key={r.slug}>
+                  <RestaurantCard restaurant={r} />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
 
       {/* News */}
       {latestNews.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
           <div className="flex items-end justify-between">
             <h2 className="font-display font-semibold text-4xl text-ink">
               {t("newsTitle")}
@@ -217,21 +240,39 @@ export default async function HomePage({
               {tCommon("viewAll")} →
             </Link>
           </div>
-          <div className="stagger mt-8 grid gap-5 sm:grid-cols-3">
+          <div className="stagger mt-8 grid gap-6 sm:grid-cols-3">
             {latestNews.map((n) => (
               <Link
                 key={n.id}
                 href={`/news/${n.slug}`}
-                className="motion-card block rounded-2xl border border-rule bg-surface p-6 sm:p-8"
+                className="motion-card group block overflow-hidden rounded-2xl border border-rule bg-surface"
               >
-                {n.publishedAt ? (
-                  <time className="text-xs font-medium uppercase tracking-wide text-ink-faint">
-                    {new Date(n.publishedAt).toLocaleDateString(locale)}
-                  </time>
+                {n.coverImageUrl ? (
+                  <div className="relative aspect-[16/9] overflow-hidden bg-surface-2">
+                    <Image
+                      src={n.coverImageUrl}
+                      alt=""
+                      fill
+                      sizes="(min-width: 640px) 33vw, 100vw"
+                      className="motion-card-image object-cover"
+                    />
+                  </div>
                 ) : null}
-                <h3 className="mt-2 font-display font-semibold text-2xl leading-snug text-ink">
-                  {n.translations[0]?.title ?? "—"}
-                </h3>
+                <div className="p-6 sm:p-8">
+                  {n.publishedAt ? (
+                    <time className="text-xs font-medium uppercase tracking-wide text-ink-faint">
+                      {new Date(n.publishedAt).toLocaleDateString(locale)}
+                    </time>
+                  ) : null}
+                  <h3 className="mt-2 font-display font-semibold text-2xl leading-snug text-ink transition-colors group-hover:text-accent">
+                    {n.translations[0]?.title ?? "—"}
+                  </h3>
+                  {n.translations[0]?.excerpt ? (
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-soft">
+                      {n.translations[0].excerpt}
+                    </p>
+                  ) : null}
+                </div>
               </Link>
             ))}
           </div>
@@ -247,7 +288,7 @@ export default async function HomePage({
 
       {/* Newsletter */}
       <section className="border-t border-rule text-ink">
-        <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
+        <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 md:px-8 md:py-24">
           <h2 className="font-display font-semibold text-4xl">{t("newsletterTitle")}</h2>
           <p className="mt-2 text-ink-soft">{t("newsletterSubtitle")}</p>
           <NewsletterForm />
