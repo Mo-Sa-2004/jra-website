@@ -1,4 +1,5 @@
 import { cache } from "react";
+import type { PriceTier } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { RestaurantCardData } from "@/components/restaurant-card";
 
@@ -9,18 +10,25 @@ function toCardData(r: {
   shortDescription: string | null;
   phone?: string | null;
   openingHoursText?: string | null;
+  priceTier: PriceTier;
   images: { url: string; isPrimary: boolean }[];
   governorate: { nameEn: string; nameAr: string | null } | null;
   cuisines: { cuisine: { nameEn: string; nameAr: string | null } }[];
   classificationLevel: { stars: number } | null;
 }): RestaurantCardData {
   const primary = r.images.find((i) => i.isPrimary) ?? r.images[0];
+  // A second image, for the listings that have uploaded more than just their
+  // logo, becomes the card's cover photo with the logo overlaid on top of it
+  // — see restaurant-card.tsx. Most only have the one image, so this is
+  // usually null and the card falls back to its plain single-image layout.
+  const cover = r.images.find((i) => i !== primary);
   return {
     slug: r.slug,
     name: r.name,
     nameAr: r.nameAr,
     shortDescription: r.shortDescription,
     imageUrl: primary?.url ?? null,
+    coverImageUrl: cover?.url ?? null,
     // Both languages travel to the card, which picks by locale. Resolving to
     // English here meant every card on the Arabic site showed an English
     // governorate and cuisine under an Arabic restaurant name.
@@ -29,6 +37,7 @@ function toCardData(r: {
     cuisineName: r.cuisines[0]?.cuisine.nameEn ?? null,
     cuisineNameAr: r.cuisines[0]?.cuisine.nameAr ?? null,
     stars: r.classificationLevel?.stars ?? null,
+    priceTier: r.priceTier,
     hasPhone: Boolean(r.phone),
     hasHours: Boolean(r.openingHoursText),
   };

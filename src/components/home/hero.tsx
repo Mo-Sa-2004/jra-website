@@ -127,18 +127,17 @@ export async function HomeHero({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
               {t("browseByCuisine")}
             </p>
-            {/* gap-x only: the vertical rhythm comes from each link's own
-                padding, which is what lifts the hit area to 44px without
-                spacing the row out visually. */}
-            <ul className="mt-1 flex flex-wrap gap-x-6">
+            {/* Pills rather than plain links — a filter you can browse
+                reads more like navigation when it looks pressable. */}
+            <ul className="mt-3 flex flex-wrap gap-2.5">
               {cuisines.map((c) => (
                 <li key={c.slug}>
                   <Link
                     href={`/restaurants?cuisine=${c.slug}`}
-                    className="group inline-flex min-h-[44px] items-center gap-2 py-3 text-white/80 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className="group inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-white/80 transition-colors hover:border-accent hover:bg-accent hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                   >
                     <span className="text-sm font-medium">{c.label}</span>
-                    <span className="tabular text-xs text-white/45 transition-colors group-hover:text-brass">
+                    <span className="tabular text-xs text-white/50 transition-colors group-hover:text-white/80">
                       {c.count}
                     </span>
                   </Link>

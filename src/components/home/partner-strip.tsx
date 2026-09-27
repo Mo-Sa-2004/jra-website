@@ -39,7 +39,7 @@ export async function PartnerStrip() {
   const t = await getTranslations("home.partners");
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-24">
       <h2 className="font-display font-semibold text-4xl text-ink">{t("title")}</h2>
       <p className="mt-3 max-w-2xl leading-relaxed text-ink-soft">{t("intro")}</p>
 
