@@ -82,7 +82,7 @@ export async function HomeHero({
           transition, so a second fade at the hero's edge would have punched
           a light band into the middle of it. */}
 
-      <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-36 lg:pt-44">
+      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 md:px-8 sm:pb-20 sm:pt-36 lg:pt-44">
         <div className="max-w-2xl">
           <p
             className="animate-editorial-rise text-xs font-semibold uppercase tracking-[0.2em] text-brass"
