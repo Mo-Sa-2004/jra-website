@@ -1,89 +1,57 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { HeroSearch } from "@/components/home/hero-search";
-import { ImageStreamHero } from "@/components/ui/image-stream-hero";
 
 /**
  * Homepage hero.
  *
  * The previous version was a white card floating over a blurred backdrop, with
  * the association described in prose and two buttons beneath it. It told you
- * JRA represents Jordan's restaurants. This shows them: a corridor of real
- * member photography running toward the viewer, search as the primary action,
- * and the cuisine strip doing double duty as proof of range and as navigation.
+ * JRA represents Jordan's restaurants. This shows them: real member
+ * photography beside the text, search as the primary action, and the cuisine
+ * strip doing double duty as proof of range and as navigation.
+ *
+ * The right side was originally a moving 3D corridor of photos rushing toward
+ * the viewer. It looked striking at full hero width but cramped once boxed
+ * into a column next to the text — a motion effect built for filling a whole
+ * screen doesn't shrink gracefully into a frame. This replaces it with a
+ * static collage of the same real member photography: same promise, no
+ * effect that needs a lot of room to read as intentional rather than
+ * squeezed.
  *
  * Dark ground on purpose — food photography reads better against it, and it
  * gives the page a distinct opening register before settling into the light
  * editorial layout below.
  *
- * Governorates were the first candidate for the strip, but three of them hold
- * no restaurants and 288 listings have none assigned, so it would have
- * advertised the gap rather than the reach. Cuisine covers 78% and spreads
- * properly.
+ * Governorates were the first candidate for the cuisine strip, but three of
+ * them hold no restaurants and 288 listings have none assigned, so it would
+ * have advertised the gap rather than the reach. Cuisine covers 78% and
+ * spreads properly.
  */
 
 export type HeroCuisine = { slug: string; label: string; count: number };
-
-/**
- * The corridor renders plain <img> rather than next/image, so nothing resizes
- * these for us. Eighteen full-resolution restaurant photos would be several
- * megabytes on first paint; the cards are ~18% of the container's width, so a
- * 420px derivative is already more than enough. Cloudinary does the work in
- * the URL. Non-Cloudinary sources (local dev uploads) pass through untouched.
- */
-function thumb(url: string): string {
-  const marker = "/image/upload/";
-  const at = url.indexOf(marker);
-  if (at === -1) return url;
-  const head = url.slice(0, at + marker.length);
-  const tail = url.slice(at + marker.length);
-  return `${head}w_420,h_560,c_fill,g_auto,q_auto,f_auto/${tail}`;
-}
 
 export async function HomeHero({
   images,
   cuisines,
   restaurantCount,
+  totalMembers,
 }: {
   images: { url: string; alt: string }[];
   cuisines: HeroCuisine[];
   restaurantCount: number;
+  totalMembers: number;
 }) {
   const t = await getTranslations("home");
 
-  const stream = images.map((i) => ({ src: thumb(i.url), alt: i.alt }));
+  const [main, sideA, sideB] = images;
 
   return (
-    <ImageStreamHero
-      images={stream}
-      // Seven per rail rather than the default nine: these are photographs of
-      // real venues, and a denser corridor turns them into texture.
-      cards={7}
-      speed={26}
-      axis={48}
-      className="bg-canvas-deep"
-    >
-      {/* Scrim. A floor that settles the corridor into the ground, and a
-          directional wash keeping the text side dark wherever the photography
-          runs bright. The ground is a brand-derived navy rather than near
-          black, and lighter again after the first pass read heavy — white body copy
-          still measures 13.0:1 on it, and the faintest tier 5.5:1, but it reads as
-          a colour rather than an absence of one. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-canvas-deep via-canvas-deep/80 to-canvas-deep/40"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-canvas-deep via-canvas-deep/75 to-transparent rtl:bg-gradient-to-l"
-      />
-      {/* No bottom fade here any more. The page wraps the hero and the
-          services grid in one container that owns the whole navy-to-paper
-          transition, so a second fade at the hero's edge would have punched
-          a light band into the middle of it. */}
-
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-24 sm:px-6 md:px-8 sm:pb-20 sm:pt-36 lg:pt-44">
-        <div className="max-w-2xl">
+    <div className="bg-canvas-deep">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 px-4 pb-16 pt-24 sm:px-6 md:px-8 sm:pb-20 sm:pt-36 lg:grid-cols-12 lg:gap-8 lg:pt-32">
+        <div className="lg:col-span-7">
           <p
             className="animate-editorial-rise text-xs font-semibold uppercase tracking-[0.2em] text-brass"
             style={{ animationDelay: "80ms" }}
@@ -95,7 +63,7 @@ export async function HomeHero({
               tracking is left alone in RTL. The Latin side uses Fraunces —
               already loaded for the system and, until now, barely used. */}
           <h1
-            className="animate-editorial-rise mt-5 font-editorial text-[clamp(2.4rem,6vw,4.5rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-white rtl:font-display rtl:leading-[1.3] rtl:tracking-normal"
+            className="animate-editorial-rise mt-5 font-editorial text-[clamp(2.4rem,5vw,4.5rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-white rtl:font-display rtl:leading-[1.35] rtl:tracking-normal"
             style={{ animationDelay: "160ms" }}
           >
             {t("heroTitle")}
@@ -116,12 +84,75 @@ export async function HomeHero({
           </div>
         </div>
 
+        {/* Real member photography as a static collage — one large frame and,
+            when there are enough photos to fill them without repeating, two
+            smaller ones underneath. Falls back gracefully with fewer images:
+            just the large frame, or nothing at all rather than an empty box. */}
+        {main ? (
+          <div className="animate-editorial-rise lg:col-span-5" style={{ animationDelay: "200ms" }}>
+            <div className="relative h-[260px] w-full overflow-hidden rounded-2xl border border-white/10">
+              <Image
+                src={main.url}
+                alt={main.alt}
+                fill
+                sizes="(min-width: 1024px) 38vw, 90vw"
+                className="object-cover"
+                priority
+              />
+              {/* Floating badge — real figures (member count, classified
+                  restaurants), not a generic star rating: there's no
+                  crowd-review system behind this site to back one up, only
+                  JRA's own classification, which the directory already shows
+                  per restaurant. */}
+              <div className="absolute bottom-3 start-3 flex items-center gap-2 rounded-xl border border-white/30 bg-white/85 px-3 py-2 backdrop-blur-md">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-xs leading-tight text-ink">
+                  <span className="block font-display font-semibold text-sm">
+                    {totalMembers}+ {t("statMembers")}
+                  </span>
+                  <span className="block text-ink-soft">
+                    {restaurantCount} {t("statRestaurants")}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {sideA || sideB ? (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                {[sideA, sideB].map((img, i) =>
+                  img ? (
+                    <div
+                      key={img.url}
+                      className="relative h-[140px] overflow-hidden rounded-2xl border border-white/10"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={img.alt}
+                        fill
+                        sizes="(min-width: 1024px) 19vw, 45vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    // Odd photo count: an empty rounded frame reads as an
+                    // intentional gap in an editorial grid, not a broken tile.
+                    <div key={`empty-${i}`} className="rounded-2xl border border-white/10" />
+                  ),
+                )}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         {/* Cuisine strip — the structural device. Real counts, and every item
-            is a working filter rather than decoration. */}
+            is a working filter rather than decoration. Full-width, below
+            both columns, rather than squeezed into the text column alone. */}
         {cuisines.length > 0 ? (
           <nav
             aria-label={t("browseByCuisine")}
-            className="animate-editorial-rise mt-12 border-t border-white/15 pt-6 sm:mt-16"
+            className="animate-editorial-rise border-t border-white/15 pt-6 lg:col-span-12"
             style={{ animationDelay: "400ms" }}
           >
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
@@ -147,6 +178,6 @@ export async function HomeHero({
           </nav>
         ) : null}
       </div>
-    </ImageStreamHero>
+    </div>
   );
 }

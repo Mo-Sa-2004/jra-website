@@ -151,6 +151,7 @@ export default async function HomePage({
         images={heroImages}
         cuisines={heroCuisines}
         restaurantCount={restaurantCount}
+        totalMembers={totalMembers}
       />
 
       {/* Sector services — inside the dark half of the fade, so the heading
