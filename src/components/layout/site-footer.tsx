@@ -29,41 +29,50 @@ const SOCIAL_ICONS = {
   youtube: Youtube,
 } as const;
 
+/**
+ * Mirrors the client's footer spec ("Core links, contact details, social
+ * channels, Privacy, Terms, Accessibility, Sitemap") grouped under the same
+ * eight-category structure as the new primary nav, rather than the ad hoc
+ * grouping this footer used before.
+ */
 const COLUMNS = [
   {
     headingKey: "footer.colDirectory",
     links: [
-      { labelKey: "nav.restaurants", href: "/restaurants" },
-      { labelKey: "nav.suppliers", href: "/suppliers" },
-      { labelKey: "nav.marketplace", href: "/marketplace" },
+      { labelKey: "nav2.directory.restaurants", href: "/restaurants" },
+      { labelKey: "nav2.directory.suppliers", href: "/suppliers" },
+      { labelKey: "nav2.directory.marketplace", href: "/marketplace" },
+      { labelKey: "nav2.directory.investment", href: "/opportunities" },
     ],
   },
   {
     headingKey: "footer.colMembers",
     links: [
-      { labelKey: "nav.membership", href: "/membership" },
-      { labelKey: "nav.classification", href: "/classification" },
-      { labelKey: "nav.sustainability", href: "/sustainability" },
-      { labelKey: "nav.training", href: "/training" },
+      { labelKey: "nav2.about.label", href: "/about" },
+      { labelKey: "nav2.membership.label", href: "/membership" },
+      { labelKey: "nav2.classification.label", href: "/classification" },
+      { labelKey: "nav2.training.label", href: "/training" },
+      { labelKey: "nav2.knowledge.legislation", href: "/legal" },
     ],
   },
   {
     headingKey: "footer.colResources",
     links: [
-      { labelKey: "nav.news", href: "/news" },
-      { labelKey: "nav.magazine", href: "/magazine" },
-      { labelKey: "nav.knowledge", href: "/knowledge" },
-      { labelKey: "nav.opportunities", href: "/opportunities" },
-      { labelKey: "nav.jobs", href: "/jobs" },
-      { labelKey: "nav.projects", href: "/projects" },
+      { labelKey: "nav2.newsEvents.news", href: "/news" },
+      { labelKey: "nav2.newsEvents.events", href: "/events" },
+      { labelKey: "nav2.knowledge.label", href: "/knowledge" },
+      { labelKey: "nav2.newsEvents.newsletter", href: "/magazine" },
+      { labelKey: "nav2.newsEvents.gallery", href: "/gallery" },
     ],
   },
 ] as const;
 
 const LEGAL_LINKS = [
-  { labelKey: "nav.about", href: "/about" },
-  { labelKey: "nav.legal", href: "/legal" },
   { labelKey: "nav.contact", href: "/contact" },
+  { labelKey: "legalPages.privacyTitle", href: "/privacy" },
+  { labelKey: "legalPages.termsTitle", href: "/terms" },
+  { labelKey: "legalPages.accessibilityTitle", href: "/accessibility" },
+  { labelKey: "footer.sitemap", href: "/sitemap" },
 ] as const;
 
 export function SiteFooter() {
