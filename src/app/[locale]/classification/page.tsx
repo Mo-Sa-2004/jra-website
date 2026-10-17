@@ -51,7 +51,7 @@ export default async function ClassificationHubPage({
           choice is now the page's first action rather than a library below the
           fold. */}
       <section aria-labelledby="choose-type" className="mt-10">
-        <h2 id="choose-type" className="font-display font-semibold text-xl text-ink">
+        <h2 id="choose-type" className="scroll-mt-28 font-display font-semibold text-xl text-ink">
           {tc("chooseTypeHeading")}
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">

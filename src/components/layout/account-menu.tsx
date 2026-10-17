@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { LogIn, UserPlus, LogOut, LayoutDashboard, ChevronDown, User } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { ORG } from "@/lib/organisation";
 
 /**
  * Who is signed in, in the header.
@@ -83,14 +84,20 @@ export function AccountMenu({
           <LogIn className="h-4 w-4" aria-hidden="true" />
           {t("login")}
         </Link>
-        <Link
-          href="/membership"
+        {/* "Join JRA" registers directly in the CRM — the client's handover
+            is explicit that this button is not a link to the informational
+            /membership page, which stays reachable from the nav dropdown
+            instead ("Why Join JRA?"). */}
+        <a
+          href={ORG.external.crmRegister}
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={onNavigate}
           className="pill-press ui-caps lift flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <UserPlus className="h-4 w-4" aria-hidden="true" />
           {t("membership")}
-        </Link>
+        </a>
       </>
     );
   }

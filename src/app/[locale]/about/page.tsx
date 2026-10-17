@@ -135,7 +135,7 @@ export default async function AboutPage({
       ) : null}
 
       {board.length > 0 && (
-        <section className="mt-20 border-t border-rule pt-16">
+        <section id="board" className="mt-20 scroll-mt-28 border-t border-rule pt-16">
           <h2 className="font-display font-semibold text-2xl text-ink">{t("aboutBoard")}</h2>
           <div className="stagger mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-6">
             {board.map((p) => (
@@ -169,7 +169,7 @@ export default async function AboutPage({
       )}
 
       {staff.length > 0 && (
-        <section className="mt-20">
+        <section id="team" className="mt-20 scroll-mt-28">
           <h2 className="font-display font-semibold text-2xl text-ink">{t("aboutTeam")}</h2>
           <div className="stagger mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {staff.map((p) => (
@@ -213,7 +213,7 @@ export default async function AboutPage({
       )}
 
       {reports.length > 0 && (
-        <section className="mt-20">
+        <section id="reports" className="mt-20 scroll-mt-28">
           <h2 className="font-display font-semibold text-2xl text-ink">{t("aboutReports")}</h2>
           <div className="stagger mt-8 grid gap-4 sm:grid-cols-2">
             {reports.map((r) => (
