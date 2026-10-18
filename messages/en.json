@@ -52,7 +52,10 @@
     "skipToContent": "Skip to main content",
     "visitWebsite": "Visit website",
     "callRestaurant": "Call",
-    "messageOnWhatsapp": "Message on WhatsApp"
+    "messageOnWhatsapp": "Message on WhatsApp",
+    "comingSoonShort": "Coming soon",
+    "previous": "Previous",
+    "next": "Next"
   },
   "home": {
     "heroKicker": "Jordan Restaurant Association",
@@ -105,7 +108,13 @@
       "intro": "The association's office is in Jabal Amman, by the 2nd Circle. Members and the public are welcome during working hours.",
       "directions": "Get directions",
       "mapTitle": "Map showing the Jordan Restaurant Association office in Jabal Amman"
-    }
+    },
+    "newMemberBanner": "Newest member restaurants",
+    "newBadge": "New",
+    "quickAccessTitle": "How can we help?",
+    "newsEventsTitle": "Latest News & Events",
+    "featured": "Featured",
+    "siyahaJobs": "SiyahaJobs"
   },
   "footer": {
     "tagline": "One network. One voice. Endless opportunities.",
@@ -131,7 +140,11 @@
     "videoTitle": "Watch",
     "statYears": "Years representing the sector",
     "statClassified": "Classified establishments listed",
-    "statGovernorates": "Governorates represented"
+    "statGovernorates": "Governorates represented",
+    "governanceTitle": "Governance",
+    "governanceBody": "JRA's governance structure and policies.",
+    "partnershipsTitle": "Partnerships & Memberships",
+    "partnershipsBody": "Organisations and networks JRA partners with."
   },
   "membership": {
     "intro": "Joining the Jordan Restaurant Association is one of the smartest investments you can make for your establishment's success — advocacy, classification support, training, and a directory presence that reaches visitors and residents across Jordan. Submit your details below and our membership team will follow up.",
@@ -783,7 +796,27 @@
     "newsletterTitle": "Newsletter",
     "newsletterDescription": "Subscribe to the Jordan Restaurant Association newsletter for sector news, classification updates and member announcements.",
     "loginTitle": "Log In",
-    "loginDescription": "Log in to manage your restaurant or supplier profile on the Jordan Restaurant Association platform."
+    "loginDescription": "Log in to manage your restaurant or supplier profile on the Jordan Restaurant Association platform.",
+    "eventsTitle": "Events",
+    "eventsDescription": "Upcoming and past JRA meetings, workshops and industry events.",
+    "galleryTitle": "Media Gallery",
+    "galleryDescription": "Photos and video from JRA events, news coverage and member restaurants.",
+    "industryNumbersTitle": "Industry in Numbers",
+    "industryNumbersDescription": "The Jordan restaurant sector, in the figures JRA tracks.",
+    "privacyTitle": "Privacy Policy",
+    "privacyDescription": "How the Jordan Restaurant Association handles personal data on this site.",
+    "termsTitle": "Terms of Use",
+    "termsDescription": "Terms governing the use of the Jordan Restaurant Association website.",
+    "accessibilityTitle": "Accessibility",
+    "accessibilityDescription": "The Jordan Restaurant Association's commitment to an accessible website.",
+    "sitemapTitle": "Sitemap",
+    "sitemapDescription": "Every section of the Jordan Restaurant Association website, in one list.",
+    "governanceTitle": "Governance",
+    "governanceDescription": "The Jordan Restaurant Association's governance structure and policies.",
+    "partnershipsTitle": "Partnerships & Memberships",
+    "partnershipsDescription": "Organisations and networks the Jordan Restaurant Association partners with.",
+    "startBusinessTitle": "Start Your Business",
+    "startBusinessDescription": "Guidance for opening a restaurant, cafe or tourism-sector business in Jordan."
   },
   "priceTier": {
     "UNKNOWN": "Not listed",
@@ -809,5 +842,106 @@
     "outstanding": "Outstanding",
     "overdue": "Overdue",
     "empty": "No invoices raised yet."
+  },
+  "nav2": {
+    "home": "Home",
+    "about": {
+      "label": "About JRA",
+      "whoWeAre": "Who We Are",
+      "visionMission": "Vision & Mission",
+      "board": "Board of Directors",
+      "team": "JRA Team",
+      "governance": "Governance",
+      "partnerships": "Partnerships & Memberships",
+      "whatWeDo": "What We Do",
+      "reports": "Annual Reports"
+    },
+    "membership": {
+      "label": "Membership & Services",
+      "whyJoin": "Why Join JRA?",
+      "benefits": "Membership Benefits",
+      "services": "JRA Services",
+      "eligibility": "Eligibility",
+      "procedures": "Membership Procedures",
+      "fees": "Membership Fees",
+      "faq": "FAQ"
+    },
+    "classification": {
+      "label": "Classification & Licensing",
+      "selfAssessment": "Self-Assessment",
+      "standards": "Classification Standards",
+      "firstTime": "First-Time Licensing & Classification",
+      "renewal": "Annual Renewal",
+      "reclassification": "Reclassification",
+      "requirements": "Requirements & Documents",
+      "forms": "Forms & Downloads"
+    },
+    "directory": {
+      "label": "Directory & Industry",
+      "restaurants": "Restaurant Directory",
+      "suppliers": "Supplier Directory",
+      "marketplace": "Marketplace",
+      "startBusiness": "Start Your Business",
+      "investment": "Investment Opportunities",
+      "industryNumbers": "Industry in Numbers"
+    },
+    "training": {
+      "label": "Training",
+      "upcoming": "Upcoming Training",
+      "calendar": "Training Calendar",
+      "resources": "Training Resources",
+      "noss": "National Occupational Standards (NOSS)",
+      "hrManuals": "HR Manuals"
+    },
+    "knowledge": {
+      "label": "Knowledge Center",
+      "research": "Research & Studies",
+      "reports": "Reports",
+      "guides": "Guides & Toolkits",
+      "legislation": "Legislation & Regulations",
+      "circulars": "Circulars"
+    },
+    "newsEvents": {
+      "label": "News & Events",
+      "news": "News",
+      "events": "Events",
+      "newsletter": "JRA Newsletter",
+      "gallery": "Media Gallery"
+    }
+  },
+  "header": {
+    "memberPortal": "Member Portal",
+    "joinJra": "Join JRA"
+  },
+  "events": {
+    "title": "Events",
+    "description": "JRA meetings, workshops and industry events — upcoming and past.",
+    "upcoming": "Upcoming",
+    "past": "Past events",
+    "noUpcoming": "No upcoming events right now — check back soon."
+  },
+  "gallery": {
+    "title": "Media Gallery",
+    "description": "Photos and video from JRA events, news coverage and member restaurants."
+  },
+  "industryNumbers": {
+    "title": "Industry in Numbers",
+    "description": "The Jordan restaurant sector, in the figures JRA tracks.",
+    "statMembers": "Member establishments",
+    "statRestaurants": "Classified restaurants",
+    "statSuppliers": "Registered suppliers",
+    "statGovernorates": "Governorates represented",
+    "statFounded": "Founded"
+  },
+  "directory": {
+    "startBusinessTitle": "Start Your Business",
+    "startBusinessBody": "Guidance for opening a restaurant, cafe or tourism-sector business in Jordan."
+  },
+  "legalPages": {
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Use",
+    "accessibilityTitle": "Accessibility",
+    "sitemapTitle": "Sitemap",
+    "contentPending": "This page's final text is being prepared with JRA and will be published here shortly."
   }
 }

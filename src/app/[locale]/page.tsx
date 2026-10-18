@@ -1,27 +1,36 @@
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   Store,
+  Users2,
+  Truck,
+  GraduationCap,
   ClipboardCheck,
-  Leaf,
-  Handshake,
-  ArrowRight,
+  Briefcase,
+  CalendarDays,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { RestaurantCard } from "@/components/restaurant-card";
-import { NewsletterForm } from "@/components/newsletter-form";
-import { HomeHero } from "@/components/home/hero";
-import { PartnerStrip } from "@/components/home/partner-strip";
-import { ReachUs } from "@/components/home/reach-us";
-import { getFeaturedRestaurants } from "@/lib/restaurants";
+import { CoverThumb } from "@/components/cover-thumb";
+import { NewMemberBanner, type BannerRestaurant } from "@/components/home/new-member-banner";
 import { db } from "@/lib/db";
-import { StatGrid } from "@/components/stat-grid";
 import { ORG } from "@/lib/organisation";
 
 // Cached and revalidated every 300s. Set per route since the site-wide
 // force-dynamic was removed from the locale layout (blueprint §4.2).
 export const revalidate = 300;
 
+/**
+ * Rebuilt to the client's "FINAL SITEMAP & HOME PAGE WIREFRAME" handover
+ * (October 2026): exactly five sections — Header, the dynamic new-member
+ * banner, six Quick Access cards, one combined News & Events section, and
+ * the Footer. The previous homepage's marketing hero, services band, stats
+ * band, featured-restaurants grid, partner strip, "reach us" section and
+ * newsletter signup are deliberately not here — none of them are in the new
+ * wireframe, and the doc is explicit that the page should NOT carry a
+ * second restaurant grid or a standalone training section below the fold.
+ * Those components (PartnerStrip, ReachUs, NewsletterForm, HomeHero) are
+ * left in the codebase rather than deleted, in case they belong elsewhere.
+ */
 export default async function HomePage({
   params,
 }: {
@@ -31,269 +40,246 @@ export default async function HomePage({
   setRequestLocale(locale);
   const t = await getTranslations("home");
   const tCommon = await getTranslations("common");
+  const tNav2 = await getTranslations("nav2");
+  const tHeader = await getTranslations("header");
 
-  const [
-    featured,
-    restaurantCount,
-    supplierCount,
-    representedGovernorates,
-    latestNews,
-    heroImageRows,
-    cuisineRows,
-  ] = await Promise.all([
-    getFeaturedRestaurants(6),
-    db.restaurant.count({ where: { status: "PUBLISHED" } }),
-    db.supplier.count({ where: { status: "PUBLISHED" } }),
+  const sevenDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+
+  const [newMembers, latestNews, upcomingEvents] = await Promise.all([
+    // "02 Dynamic New-Member Restaurants Banner": the newest approved
+    // restaurants, newest first — real membership data, not stock photography.
     db.restaurant.findMany({
-      where: { status: "PUBLISHED", governorateId: { not: null } },
-      distinct: ["governorateId"],
-      select: { governorateId: true },
+      where: { status: "PUBLISHED" },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      include: {
+        images: { where: { isPrimary: true }, take: 1 },
+        governorate: true,
+      },
     }),
     db.newsArticle.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
-      take: 3,
-      select: {
-        id: true,
-        slug: true,
-        publishedAt: true,
-        coverImageUrl: true,
-        translations: {
-          where: { locale: locale === "ar" ? "ar" : "en" },
-          select: { title: true, excerpt: true },
-        },
-      },
+      take: 4,
+      include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
-    // Hero corridor: real member photography rather than stock. One image per
-    // restaurant so the same venue never appears twice on a rail. Fourteen
-    // covers the seven cards per rail without the sequence visibly repeating.
-    db.restaurantImage.findMany({
-      where: { isPrimary: true, restaurant: { status: "PUBLISHED" } },
-      select: { url: true, altTextEn: true, altTextAr: true, restaurant: { select: { name: true } } },
-      distinct: ["restaurantId"],
-      take: 14,
-      orderBy: { restaurantId: "asc" },
-    }),
-    db.cuisine.findMany({
-      select: {
-        slug: true,
-        nameEn: true,
-        nameAr: true,
-        _count: { select: { restaurants: true } },
-      },
+    db.event.findMany({
+      where: { status: "PUBLISHED", startAt: { gte: new Date() } },
+      orderBy: { startAt: "asc" },
+      take: 4,
+      include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
   ]);
 
-  const totalMembers = restaurantCount + supplierCount;
-  const governorateCount = representedGovernorates.length;
-
-  const heroImages = heroImageRows.map((img) => ({
-    url: img.url,
-    alt: (locale === "ar" ? img.altTextAr : img.altTextEn) ?? img.restaurant?.name ?? "",
+  const bannerRestaurants: BannerRestaurant[] = newMembers.map((r) => ({
+    slug: r.slug,
+    name: (locale === "ar" && r.nameAr) || r.name,
+    imageUrl: r.images[0]?.url ?? null,
+    location: (locale === "ar" ? r.governorate?.nameAr : r.governorate?.nameEn) ?? null,
+    isNew: r.createdAt >= sevenDaysAgo,
   }));
 
-  // Top cuisines by member count. Empty ones are dropped rather than shown as
-  // zeroes — the strip is meant to read as range, not as a gap report.
-  const heroCuisines = cuisineRows
-    .filter((c) => c._count.restaurants > 0)
-    .sort((a, b) => b._count.restaurants - a._count.restaurants)
-    .slice(0, 8)
-    .map((c) => ({
-      slug: c.slug,
-      label: (locale === "ar" && c.nameAr ? c.nameAr : c.nameEn) ?? c.slug,
-      count: c._count.restaurants,
-    }));
-
-  const services = [
+  // "03 Quick Access – 6 services", in the exact order the handover
+  // specifies. Member Portal and SiyahaJobs are the two that hand off to
+  // another system rather than a page on this site.
+  const quickAccess = [
     {
+      key: "memberPortal",
+      icon: Users2,
+      label: tHeader("memberPortal"),
+      href: ORG.external.crmLogin,
+      external: true,
+    },
+    {
+      key: "siyahaJobs",
+      icon: Briefcase,
+      label: t("siyahaJobs"),
+      href: "/jobs",
+      external: false,
+    },
+    {
+      key: "restaurants",
       icon: Store,
-      title: t("serviceDirectory"),
-      desc: t("serviceDirectoryDesc"),
+      label: tNav2("directory.restaurants"),
       href: "/restaurants",
+      external: false,
     },
     {
+      key: "suppliers",
+      icon: Truck,
+      label: tNav2("directory.suppliers"),
+      href: "/suppliers",
+      external: false,
+    },
+    {
+      key: "training",
+      icon: GraduationCap,
+      label: tNav2("training.upcoming"),
+      href: "/training",
+      external: false,
+    },
+    {
+      key: "selfAssessment",
       icon: ClipboardCheck,
-      title: t("serviceClassification"),
-      desc: t("serviceClassificationDesc"),
-      href: "/classification",
+      label: tNav2("classification.selfAssessment"),
+      href: "/classification#choose-type",
+      external: false,
     },
-    {
-      icon: Handshake,
-      title: t("serviceMembership"),
-      desc: t("serviceMembershipDesc"),
-      href: "/membership",
-    },
-    {
-      icon: Leaf,
-      title: t("serviceSustainability"),
-      desc: t("serviceSustainabilityDesc"),
-      href: "/sustainability",
-    },
-  ];
+  ] as const;
+
+  // "04 Latest News & Events": one merged, date-sorted feed rather than two
+  // separate sections — the doc is explicit that a standalone training block
+  // or a second restaurant section do not belong here, and by the same logic
+  // news and events share a single list rather than sitting side by side.
+  type Combined =
+    | { kind: "news"; date: Date; id: string; title: string; href: string; cover: string | null; excerpt: string | null }
+    | { kind: "event"; date: Date; id: string; title: string; href: string; cover: string | null; location: string | null };
+
+  const combined: Combined[] = [
+    ...latestNews
+      .filter((n) => n.publishedAt)
+      .map((n): Combined => ({
+        kind: "news",
+        date: n.publishedAt as Date,
+        id: n.id,
+        title: n.translations[0]?.title ?? n.slug,
+        href: `/news/${n.slug}`,
+        cover: n.coverImageUrl,
+        excerpt: n.translations[0]?.excerpt ?? null,
+      })),
+    ...upcomingEvents.map((e): Combined => ({
+      kind: "event",
+      date: e.startAt,
+      id: e.id,
+      title: e.translations[0]?.title ?? e.slug,
+      href: "/events",
+      cover: e.coverImageUrl,
+      location: e.locationText,
+    })),
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  const [featured, ...rest] = combined;
 
   return (
-    /* The descent runs the whole page. It is deliberately two gradients, not
-       one: the murky middle of a navy-to-parchment ramp is where text becomes
-       unreadable, so that part is compressed into the inner container below,
-       where the styling is under control. Everything out here stays light —
-       raised surface drifting to parchment across the remaining sections —
-       which is a change you feel while scrolling rather than one you can
-       point at. */
-    <div className="bg-gradient-to-b from-surface-2 to-paper">
-      {/* The navy-to-paper fade spans exactly this container: the hero and
-          the services grid. Anchoring it to a real element rather than
-          guessing viewport heights is what keeps it predictable — the fade
-          finishes at a known edge, so nothing further down can drift onto a
-          mid-tone where neither dark nor light text is readable. Everything
-          inside is styled for a dark ground; everything after is on paper. */}
-      <div className="bg-[linear-gradient(180deg,var(--color-canvas-deep)_0%,var(--color-canvas-deep)_58%,var(--color-canvas-deep-2)_78%,var(--color-surface-2)_100%)]">
-      <HomeHero
-        images={heroImages}
-        cuisines={heroCuisines}
-        restaurantCount={restaurantCount}
-      />
+    <div>
+      <NewMemberBanner restaurants={bannerRestaurants} />
 
-      {/* Sector services — inside the dark half of the fade, so the heading
-          is light and the cards keep their own solid surface rather than
-          going translucent, which would drag their text onto the navy. */}
-      <section className="mx-auto max-w-7xl px-4 pb-28 pt-16 sm:px-6 md:px-8 sm:pb-36">
-        <h2 className="font-display font-semibold text-4xl text-white">
-          {t("servicesTitle")}
-        </h2>
-        <div className="stagger mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {services.map((s) => (
-            <Link
-              key={s.href}
-              href={s.href}
-              className="motion-card group rounded-2xl border border-rule bg-surface p-6 sm:p-8"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
-                <s.icon className="h-6 w-6 text-accent" strokeWidth={1.75} />
-              </span>
-              <h3 className="mt-4 font-display font-semibold text-2xl text-ink">
-                {s.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{s.desc}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent">
-                {tCommon("learnMore")}
-                <ArrowRight className="cta-arrow h-3.5 w-3.5 rtl:rotate-180" />
-              </span>
-            </Link>
-          ))}
+      {/* Quick Access — exactly 6 cards, one row on desktop, 3x2 on tablet,
+          2x3 on mobile. The handover doc asks explicitly for no slider here. */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8">
+        <h2 className="font-display font-semibold text-3xl text-ink">{t("quickAccessTitle")}</h2>
+        <div className="stagger mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {quickAccess.map((item) => {
+            const content = (
+              <>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="mt-3 text-center text-sm font-semibold leading-snug text-ink">
+                  {item.label}
+                </span>
+                {item.external ? (
+                  <ExternalLink className="mt-1 h-3 w-3 text-ink-faint" aria-hidden="true" />
+                ) : null}
+              </>
+            );
+            const className =
+              "motion-card flex flex-col items-center rounded-2xl border border-rule bg-surface p-5 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+            return item.external ? (
+              <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer" className={className}>
+                {content}
+              </a>
+            ) : (
+              <Link key={item.key} href={item.href} className={className}>
+                {content}
+              </Link>
+            );
+          })}
         </div>
       </section>
-      </div>
 
-      {/* Stats */}
-      <section className="border-y border-rule">
-        <StatGrid
-          // divide-x rather than a border per card: four numbers reading as
-          // one strip of figures, not four boxes competing for attention.
-          className="mx-auto max-w-7xl grid-cols-2 divide-x divide-rule px-4 py-12 sm:grid-cols-4 sm:px-6 md:px-8 rtl:divide-x-reverse"
-          stats={[
-            { value: totalMembers, label: t("statMembers"), suffix: "+" },
-            { value: restaurantCount, label: t("statRestaurants") },
-            { value: governorateCount, label: t("statGovernorates") },
-            { value: ORG.foundingYear, label: t("statFounded"), animate: false },
-          ]}
-        />
-      </section>
-
-      {/* Featured restaurants */}
-      {featured.length > 0 && (
-        // The section gets its own panel — a visibly distinct "shelf" for the
-        // cards, using the same border/surface pair as every other card on
-        // the site rather than a drop shadow (flat design system; see the
-        // About page and restaurant-card.tsx for the same note). And 3
-        // columns rather than 4: 6 featured restaurants divide evenly into
-        // two full rows of 3, where 4 columns left the second row two cards
-        // short — the abrupt gap on the right on wide screens.
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
-          <div className="rounded-3xl border border-rule bg-surface-2 p-6 sm:p-8 md:p-10">
+      {/* News & Events — one combined section: a featured item, then a
+          concise list of the next latest, then View All. */}
+      {featured ? (
+        <section className="border-t border-rule bg-surface-2">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8">
             <div className="flex items-end justify-between">
-              <h2 className="font-display font-semibold text-4xl text-ink">
-                {t("serviceDirectory")}
+              <h2 className="font-display font-semibold text-3xl text-ink">
+                {t("newsEventsTitle")}
               </h2>
-              <Link href="/restaurants" className="text-sm font-medium text-accent">
+              <Link href="/news" className="text-sm font-medium text-accent">
                 {tCommon("viewAll")} →
               </Link>
             </div>
-            <div className="stagger mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((r) => (
-                <div key={r.slug}>
-                  <RestaurantCard restaurant={r} />
+
+            <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+              <Link
+                href={featured.href}
+                className="motion-card group flex flex-col overflow-hidden rounded-2xl border border-rule bg-surface sm:flex-row"
+              >
+                <div className="sm:w-1/2">
+                  <CoverThumb
+                    url={featured.cover}
+                    alt=""
+                    seed={featured.id}
+                    title={featured.title}
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                    aspect="aspect-[16/10]"
+                    priority
+                  />
                 </div>
-              ))}
+                <div className="flex flex-1 flex-col justify-center p-6 sm:p-8">
+                  <span className="ui-caps inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-accent">
+                    {featured.kind === "event" ? <CalendarDays className="h-3 w-3" aria-hidden="true" /> : null}
+                    {t("featured")}
+                  </span>
+                  <h3 className="mt-2 font-display font-semibold text-2xl leading-snug text-ink">
+                    {featured.title}
+                  </h3>
+                  {featured.kind === "news" && featured.excerpt ? (
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-ink-soft">
+                      {featured.excerpt}
+                    </p>
+                  ) : null}
+                  {featured.kind === "event" && featured.location ? (
+                    <p className="mt-3 text-sm text-ink-soft">{featured.location}</p>
+                  ) : null}
+                  <time className="mt-4 text-xs text-ink-faint">
+                    {featured.date.toLocaleDateString(locale)}
+                  </time>
+                </div>
+              </Link>
+
+              <ul className="flex flex-col gap-3">
+                {rest.slice(0, 3).map((item) => (
+                  <li key={`${item.kind}-${item.id}`}>
+                    <Link
+                      href={item.href}
+                      className="motion-card flex items-center gap-4 rounded-2xl border border-rule bg-surface p-4"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                        {item.kind === "event" ? (
+                          <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Store className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-ink">
+                          {item.title}
+                        </span>
+                        <time className="text-xs text-ink-faint">
+                          {item.date.toLocaleDateString(locale)}
+                        </time>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
-      )}
-
-      {/* News */}
-      {latestNews.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8 md:py-24">
-          <div className="flex items-end justify-between">
-            <h2 className="font-display font-semibold text-4xl text-ink">
-              {t("newsTitle")}
-            </h2>
-            <Link href="/news" className="text-sm font-medium text-accent">
-              {tCommon("viewAll")} →
-            </Link>
-          </div>
-          <div className="stagger mt-8 grid gap-6 sm:grid-cols-3">
-            {latestNews.map((n) => (
-              <Link
-                key={n.id}
-                href={`/news/${n.slug}`}
-                className="motion-card group block overflow-hidden rounded-2xl border border-rule bg-surface"
-              >
-                {n.coverImageUrl ? (
-                  <div className="relative aspect-[16/9] overflow-hidden bg-surface-2">
-                    <Image
-                      src={n.coverImageUrl}
-                      alt=""
-                      fill
-                      sizes="(min-width: 640px) 33vw, 100vw"
-                      className="motion-card-image object-cover"
-                    />
-                  </div>
-                ) : null}
-                <div className="p-6 sm:p-8">
-                  {n.publishedAt ? (
-                    <time className="text-xs font-medium uppercase tracking-wide text-ink-faint">
-                      {new Date(n.publishedAt).toLocaleDateString(locale)}
-                    </time>
-                  ) : null}
-                  <h3 className="mt-2 font-display font-semibold text-2xl leading-snug text-ink transition-colors group-hover:text-accent">
-                    {n.translations[0]?.title ?? "—"}
-                  </h3>
-                  {n.translations[0]?.excerpt ? (
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-soft">
-                      {n.translations[0].excerpt}
-                    </p>
-                  ) : null}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* The three destinations JRA sends people to that are not on this
-          site, and where the association physically is. Both sit after the
-          site's own content and before the newsletter ask. */}
-      <PartnerStrip />
-
-      <ReachUs />
-
-      {/* Newsletter */}
-      <section className="border-t border-rule text-ink">
-        <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 md:px-8 md:py-24">
-          <h2 className="font-display font-semibold text-4xl">{t("newsletterTitle")}</h2>
-          <p className="mt-2 text-ink-soft">{t("newsletterSubtitle")}</p>
-          <NewsletterForm />
-        </div>
-      </section>
+      ) : null}
     </div>
   );
 }

@@ -51,6 +51,21 @@ export const ORG = {
   mapQuery: "Jordan Restaurant Association, Jabal Amman, Amman, Jordan",
 
   /**
+   * The two systems this site hands off to rather than rebuilding, per the
+   * October 2026 navigation handover: member registration/login belongs to
+   * the CRM, and job listings belong to SiyahaJobs. crm.jra.jo is live and
+   * these paths were confirmed against it directly — note crmLogin is
+   * /member/login, not /login, which is the separate staff sign-in; sending
+   * a public "Member Portal" click to the staff login would be wrong even
+   * though both exist on the same domain.
+   */
+  external: {
+    crmRegister: "https://crm.jra.jo/register",
+    crmLogin: "https://crm.jra.jo/member/login",
+    siyahaJobs: "https://siyahajobs.jo",
+  },
+
+  /**
    * Ordered as they are shown in the footer. `key` names the icon the footer
    * pairs with each one; the URLs are also emitted as schema.org `sameAs`,
    * which is how a search engine confirms these profiles are the same body.

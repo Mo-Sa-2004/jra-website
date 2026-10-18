@@ -615,6 +615,20 @@ button:hover > .cta-arrow {
   animation: nav-drop 620ms var(--ease-editorial) both;
 }
 
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-dropdown-in {
+  animation: dropdown-in 140ms ease-out both;
+}
+
 @keyframes editorial-rise {
   from {
     opacity: 0;
@@ -726,6 +740,7 @@ button:hover > .cta-arrow {
   .animate-fade-rise,
   .animate-editorial-rise,
   .animate-nav-drop,
+  .animate-dropdown-in,
   .animate-editorial-shell,
   .stagger > *,
   .parallax-layer,
