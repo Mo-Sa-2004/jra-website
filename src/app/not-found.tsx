@@ -36,7 +36,7 @@ export default function RootNotFound() {
               fontSize: "0.75rem",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color: "var(--color-accent, #0050a0)",
+              color: "var(--color-accent, #0053a0)",
               margin: 0,
             }}
           >
@@ -76,7 +76,7 @@ export default function RootNotFound() {
               href="/en"
               style={{
                 borderRadius: "999px",
-                background: "var(--color-accent, #0050a0)",
+                background: "var(--color-accent, #0053a0)",
                 color: "#fff",
                 padding: "0.7rem 1.5rem",
                 fontSize: "0.875rem",
