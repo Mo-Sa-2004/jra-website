@@ -11,6 +11,11 @@ import { ok, fail, type ActionState } from "@/lib/action-state";
 import { putFile, usingCloudinary } from "@/lib/storage";
 import { provisionMembership } from "@/lib/membership";
 import slugifyLib from "slugify";
+// Same ceiling the browser-side resizer targets, so the message shown here and
+// the limit enforced below cannot drift apart.
+import { UPLOAD_MAX_BYTES as MAX_IMAGE_BYTES } from "@/lib/prepare-image";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
 
 // --- Restaurants -----------------------------------------------------------
 
@@ -52,13 +57,27 @@ export async function deleteRestaurant(id: string) {
 
 // --- Restaurant photos ---------------------------------------------------
 
-export async function uploadRestaurantImage(restaurantId: string, formData: FormData) {
+export async function uploadRestaurantImage(
+  restaurantId: string,
+  formData: FormData
+): Promise<{ error?: string }> {
+  const t = await getTranslations("admin.feedback");
   const session = await requireAdmin();
+
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return;
+  if (!(file instanceof File) || file.size === 0) return { error: t("chooseImage") };
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) return { error: t("notAnImage") };
+  // This is the restaurant's own cover photo and the one the new-member
+  // banner shows full-bleed, so it is held to the same resized-and-validated
+  // ceiling as every other photo upload in admin rather than going to
+  // storage raw — a raw upload either fails as an opaque platform 413 above
+  // Vercel's request-body limit, or silently succeeds with whatever
+  // resolution and compression the admin's own device happened to produce,
+  // with no feedback either way.
+  if (file.size > MAX_IMAGE_BYTES) return { error: t("imageTooLarge") };
 
   const restaurant = await db.restaurant.findUnique({ where: { id: restaurantId } });
-  if (!restaurant) throw new Error("Restaurant not found");
+  if (!restaurant) return { error: t("notFound") };
 
   const stored = await putFile(file, {
     folder: `restaurants/${restaurant.slug}`,
@@ -80,6 +99,7 @@ export async function uploadRestaurantImage(restaurantId: string, formData: Form
     url: stored.url,
   });
   revalidatePath("/[locale]/admin/restaurants/[id]", "page");
+  return {};
 }
 
 export async function deleteRestaurantImage(imageId: string) {
