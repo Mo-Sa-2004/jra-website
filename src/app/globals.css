@@ -2,7 +2,9 @@
 
 /* ---------------------------------------------------------------------- */
 /* Design tokens — colors sampled directly from the real JRA logo          */
-/* (public/brand/jra-logo.png): primary blue #0050A0, wordmark gray #707070*/
+/* (public/brand/jra-logo.png, public/brand/jra-mark.png): the interior of */
+/* the mark is (0, 83, 160) / #0053A0 in ~95% of its opaque pixels across   */
+/* both files, re-verified pixel-by-pixel; wordmark gray #707070.          */
 /* ---------------------------------------------------------------------- */
 
 :root {
@@ -15,8 +17,8 @@
      floor for the captions and metadata it is used for. Darkened to the
      lightest value that clears 4.5:1 on surface, paper and surface-2. */
   --color-ink-faint: #6c6a69;
-  --color-accent: #0050a0;
-  --color-accent-strong: #003d7a;
+  --color-accent: #0053a0;
+  --color-accent-strong: #003f7a;
   --color-accent-soft: #e8f1fb;
   --color-olive: #2f6b4f;
   --color-olive-soft: #dceee3;
@@ -58,9 +60,9 @@
   --color-danger: #a32035;
   --color-danger-soft: #fee4e2;
   --color-danger-text: #a32035;
-  --color-info: #0050a0;
+  --color-info: #0053a0;
   --color-info-soft: #e8f1fb;
-  --color-info-text: #0050a0;
+  --color-info-text: #0053a0;
   --shadow-card: none;
 
   /* Editorial layer — floating white surfaces over an atmospheric backdrop.
@@ -125,8 +127,8 @@
   --color-ink: #242424;
   --color-ink-soft: #4e4d4d;
   --color-ink-faint: #6c6a69;
-  --color-accent: #0050a0;
-  --color-accent-strong: #003d7a;
+  --color-accent: #0053a0;
+  --color-accent-strong: #003f7a;
   --color-accent-soft: #e8f1fb;
   --color-olive: #2f6b4f;
   --color-olive-soft: #dceee3;
@@ -146,9 +148,9 @@
   --color-danger: #a32035;
   --color-danger-soft: #fee4e2;
   --color-danger-text: #a32035;
-  --color-info: #0050a0;
+  --color-info: #0053a0;
   --color-info-soft: #e8f1fb;
-  --color-info-text: #0050a0;
+  --color-info-text: #0053a0;
   --shadow-card: none;
   --shadow-float: none;
   --shadow-float-lg: none;
