@@ -82,8 +82,12 @@ export async function AudienceGate({
             const cells: GateImage[] = Array.from({ length: 6 }, (_, i) => images[i] ?? null);
             return (
               <div key={key} className="flex flex-col bg-surface">
-                <Link href={href} className="motion-card group relative block h-[180px] overflow-hidden sm:h-[240px]">
-                  <div className="grid h-full grid-cols-3 grid-rows-2 gap-px bg-rule">
+                <Link href={href} className="motion-card group block overflow-hidden">
+                  {/* Full-color photo grid, no wash — a faded, veiled version
+                      of real member photos looked worse than the blur it
+                      was meant to fix. The title gets its own plain block
+                      below instead of fighting the photos for contrast. */}
+                  <div className="grid h-[160px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-rule sm:h-[200px]">
                     {cells.map((image, i) => (
                       <div key={i} className="relative overflow-hidden bg-surface-2">
                         {image ? (
@@ -99,13 +103,9 @@ export async function AudienceGate({
                       </div>
                     ))}
                   </div>
-                  {/* Light wash rather than a dark scrim — the title sits on
-                      top in dark ink, not white, so the photo grid needs to
-                      read as background texture rather than a lit subject. */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/75 to-paper/40" />
-                  <span className="absolute inset-x-2 bottom-3 text-center font-display text-base font-bold text-ink sm:text-xl md:text-2xl">
+                  <p className="px-3 pb-1 pt-4 text-center font-display text-lg font-bold text-ink sm:text-xl md:text-2xl">
                     {title}
-                  </span>
+                  </p>
                 </Link>
 
                 <nav
