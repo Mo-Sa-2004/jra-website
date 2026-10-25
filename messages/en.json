@@ -717,7 +717,9 @@
     "messagePlaceholder": "Message"
   },
   "newsletterForm": {
-    "subscribed": "Thank you — you're subscribed."
+    "subscribed": "Thank you — you're subscribed.",
+    "invalidEmail": "Enter a valid email address.",
+    "rateLimited": "Too many attempts — try again in a bit."
   },
   "membershipForm": {
     "received": "Application received — our membership team will review it and follow up by email.",

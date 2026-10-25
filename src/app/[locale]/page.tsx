@@ -12,6 +12,8 @@ import {
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/cover-thumb";
 import { NewMemberBanner, type BannerRestaurant } from "@/components/home/new-member-banner";
+import { ReachUs } from "@/components/home/reach-us";
+import { NewsletterForm } from "@/components/newsletter-form";
 import { db } from "@/lib/db";
 import { ORG } from "@/lib/organisation";
 
@@ -21,15 +23,21 @@ export const revalidate = 300;
 
 /**
  * Rebuilt to the client's "FINAL SITEMAP & HOME PAGE WIREFRAME" handover
- * (October 2026): exactly five sections — Header, the dynamic new-member
- * banner, six Quick Access cards, one combined News & Events section, and
- * the Footer. The previous homepage's marketing hero, services band, stats
- * band, featured-restaurants grid, partner strip, "reach us" section and
- * newsletter signup are deliberately not here — none of them are in the new
- * wireframe, and the doc is explicit that the page should NOT carry a
- * second restaurant grid or a standalone training section below the fold.
- * Those components (PartnerStrip, ReachUs, NewsletterForm, HomeHero) are
- * left in the codebase rather than deleted, in case they belong elsewhere.
+ * (October 2026): Header, the dynamic new-member banner, six Quick Access
+ * cards, one combined News & Events section, Reach Us (map and contact
+ * details) and a newsletter signup, then the Footer. The wireframe's five
+ * sections stop at News & Events; Reach Us and the newsletter form were
+ * added back afterward at the client's own request for a fuller, more
+ * professional-feeling homepage — both already existed in the codebase
+ * (built for the previous homepage) and needed no rework beyond the usual
+ * token colors to fit back in. The previous homepage's marketing hero,
+ * services band, stats band, featured-restaurants grid and partner strip
+ * are still not here — the doc is explicit the page should not carry a
+ * second restaurant grid or a standalone training section below the fold,
+ * and partner strip's links mostly duplicate the Quick Access grid above.
+ * Those three (PartnerStrip, HomeHero, and the old stats/services bands)
+ * are left in the codebase rather than deleted, in case they belong
+ * elsewhere later.
  */
 export default async function HomePage({
   params,
@@ -280,6 +288,23 @@ export default async function HomePage({
           </div>
         </section>
       ) : null}
+
+      <ReachUs />
+
+      {/* Newsletter — the one dark band on an otherwise light page, same
+          register the old marketing hero used to open the homepage with
+          before the rebuild. NewsletterForm itself is styled for a dark
+          surface (paper-tinted text and borders), so it keeps that wrapper
+          rather than being restyled for the light sections around it. */}
+      <section className="border-t border-rule bg-ink">
+        <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 md:px-8 md:py-24">
+          <h2 className="font-display font-semibold text-3xl text-paper sm:text-4xl">
+            {t("newsletterTitle")}
+          </h2>
+          <p className="mt-3 text-paper/70">{t("newsletterSubtitle")}</p>
+          <NewsletterForm />
+        </div>
+      </section>
     </div>
   );
 }
