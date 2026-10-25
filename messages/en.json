@@ -119,7 +119,14 @@
     "gateDinerSubtitle": "Search 700+ classified restaurants, cafés and venues across Jordan.",
     "gateMemberTitle": "For Members",
     "gateMemberSubtitle": "Classification, training, legal resources and everything for restaurant and hospitality operators.",
-    "gateCta": "Explore"
+    "gateCta": "Explore",
+    "gateKicker": "Jordan Restaurant Association",
+    "gateTitle": "Who are you here as?",
+    "gateSwitchToDiner": "Looking for a restaurant instead?",
+    "gateSwitchToMember": "Here on behalf of a restaurant or hospitality business?",
+    "forMembersTitle": "Built for restaurant and hospitality businesses",
+    "forMembersSubtitle": "Classification, training, legal resources, membership benefits and everything JRA runs for operators across Jordan.",
+    "forMembersQuickAccessTitle": "Member services"
   },
   "footer": {
     "tagline": "One network. One voice. Endless opportunities.",
@@ -823,7 +830,11 @@
     "partnershipsTitle": "Partnerships & Memberships",
     "partnershipsDescription": "Organisations and networks the Jordan Restaurant Association partners with.",
     "startBusinessTitle": "Start Your Business",
-    "startBusinessDescription": "Guidance for opening a restaurant, cafe or tourism-sector business in Jordan."
+    "startBusinessDescription": "Guidance for opening a restaurant, cafe or tourism-sector business in Jordan.",
+    "discoverTitle": "Find a Restaurant",
+    "discoverDescription": "Search classified restaurants, coffee shops and venues across Jordan, browse by cuisine, and see the latest news and events from JRA.",
+    "forMembersTitle": "For Members",
+    "forMembersDescription": "Classification, training, legal resources, membership benefits and everything the Jordan Restaurant Association runs for operators."
   },
   "priceTier": {
     "UNKNOWN": "Not listed",
