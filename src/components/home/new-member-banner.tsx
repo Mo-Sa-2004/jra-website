@@ -1,10 +1,7 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, MapPin, Sparkles } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { MapPin, Sparkles } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { CoverThumb } from "@/components/cover-thumb";
 
 export type BannerRestaurant = {
   slug: string;
@@ -15,130 +12,83 @@ export type BannerRestaurant = {
 };
 
 /**
- * "02 DYNAMIC NEW MEMBER RESTAURANTS BANNER" from the client's wireframe: an
- * auto-rotating, slow carousel of the newest approved member restaurants,
- * with manual arrows and dot navigation, each slide opening that
- * restaurant's own page. Replaces the previous marketing hero entirely —
- * this section's whole point, per the handover doc, is real, current member
- * data rather than copywriting.
+ * "02 DYNAMIC NEW MEMBER RESTAURANTS BANNER" from the client's wireframe —
+ * now a photo-grid mosaic rather than a single full-bleed auto-rotating
+ * image. The original version stretched one restaurant's primary photo
+ * across a ~1800x460 box with object-cover; for restaurants whose only
+ * photo on file is a small square logo (common — see the document-migration
+ * and photo-quality work), that upscale-and-crop is exactly what produced
+ * the visible blur the client flagged. A grid of smaller cards hides a
+ * low-res source far better than one giant crop ever could, and it reads
+ * closer to the multi-photo "wall" look the client pointed to for the
+ * audience-gate tiles (see `audience-gate.tsx`) — same visual idea, applied
+ * here too, for consistency between the two.
+ *
+ * Plain async server component now, same shape as `AudienceGate` — the old
+ * version carried client-side carousel state (an interval timer, manual
+ * prev/next, dot nav) purely to show one restaurant at a time. A grid shows
+ * several at once, so none of that is needed: one less "use client"
+ * boundary, lighter bundle, no hydration work for what's otherwise static
+ * content.
  */
-export function NewMemberBanner({ restaurants }: { restaurants: BannerRestaurant[] }) {
-  const t = useTranslations();
-  const [index, setIndex] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const count = restaurants.length;
+export async function NewMemberBanner({ restaurants }: { restaurants: BannerRestaurant[] }) {
+  if (restaurants.length === 0) return null;
 
-  const go = useCallback(
-    (next: number) => {
-      if (count === 0) return;
-      setIndex(((next % count) + count) % count);
-    },
-    [count]
-  );
-
-  useEffect(() => {
-    if (count <= 1) return;
-    timer.current = setInterval(() => go(index + 1), 6000);
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, count]);
-
-  if (count === 0) return null;
+  const t = await getTranslations("home");
+  const tCommon = await getTranslations("common");
 
   return (
-    <section
-      aria-label={t("home.newMemberBanner")}
-      className="relative overflow-hidden bg-canvas-deep"
-      onMouseEnter={() => {
-        if (timer.current) clearInterval(timer.current);
-      }}
-      onMouseLeave={() => go(index + 1)}
-    >
-      <div className="relative h-[320px] w-full sm:h-[400px] lg:h-[460px]">
-        {restaurants.map((r, i) => (
+    <section aria-label={t("newMemberBanner")} className="border-b border-rule bg-canvas-deep">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:px-8 md:py-16">
+        <div className="flex items-end justify-between">
+          <h2 className="font-display text-2xl font-semibold text-white sm:text-3xl">
+            {t("newMemberBanner")}
+          </h2>
           <Link
-            key={r.slug}
-            href={`/restaurants/${r.slug}`}
-            aria-hidden={i !== index}
-            tabIndex={i === index ? 0 : -1}
-            className={`absolute inset-0 transition-opacity duration-700 ${
-              i === index ? "opacity-100" : "pointer-events-none opacity-0"
-            }`}
+            href="/restaurants"
+            className="text-sm font-medium text-white/80 transition-colors hover:text-white"
           >
-            {r.imageUrl ? (
-              <Image
-                src={r.imageUrl}
-                alt={r.name}
-                fill
-                priority={i === 0}
-                sizes="100vw"
-                className="object-cover"
-              />
-            ) : (
-              <div className="h-full w-full bg-gradient-to-br from-canvas-deep to-canvas-deep-2" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-10 sm:px-6 md:px-8">
-              {r.isNew ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
-                  <Sparkles className="h-3 w-3" aria-hidden="true" />
-                  {t("home.newBadge")}
-                </span>
-              ) : null}
-              <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold text-white sm:text-4xl">
-                {r.name}
-              </h2>
-              {r.location ? (
-                <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-white/75">
-                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                  {r.location}
-                </p>
-              ) : null}
-            </div>
+            {tCommon("viewAll")} →
           </Link>
-        ))}
+        </div>
+
+        <div className="stagger mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+          {restaurants.slice(0, 8).map((r, i) => (
+            <Link
+              key={r.slug}
+              href={`/restaurants/${r.slug}`}
+              className="motion-card group overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+            >
+              <div className="relative">
+                <CoverThumb
+                  url={r.imageUrl}
+                  alt=""
+                  seed={r.slug}
+                  title={r.name}
+                  sizes="(min-width: 1024px) 23vw, (min-width: 640px) 31vw, 48vw"
+                  aspect="aspect-square"
+                  priority={i < 4}
+                />
+                {r.isNew ? (
+                  <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-white">
+                    <Sparkles className="h-3 w-3" aria-hidden="true" />
+                    {t("newBadge")}
+                  </span>
+                ) : null}
+              </div>
+              <div className="p-3">
+                <p className="truncate text-sm font-semibold text-white">{r.name}</p>
+                {r.location ? (
+                  <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-white/60">
+                    <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                    {r.location}
+                  </p>
+                ) : null}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-
-      {count > 1 ? (
-        <>
-          <button
-            type="button"
-            onClick={() => go(index - 1)}
-            aria-label={t("common.previous")}
-            className="absolute start-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <ChevronRight className="h-5 w-5 rtl:hidden" aria-hidden="true" />
-            <ChevronLeft className="hidden h-5 w-5 rtl:block" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => go(index + 1)}
-            aria-label={t("common.next")}
-            className="absolute end-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <ChevronLeft className="h-5 w-5 rtl:hidden" aria-hidden="true" />
-            <ChevronRight className="hidden h-5 w-5 rtl:block" aria-hidden="true" />
-          </button>
-
-          <div className="absolute bottom-4 start-1/2 z-10 flex -translate-x-1/2 gap-2 rtl:translate-x-1/2">
-            {restaurants.map((r, i) => (
-              <button
-                key={r.slug}
-                type="button"
-                onClick={() => go(i)}
-                aria-label={`${i + 1}`}
-                aria-current={i === index}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === index ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      ) : null}
     </section>
   );
 }
