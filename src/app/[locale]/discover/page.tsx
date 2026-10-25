@@ -153,7 +153,7 @@ export default async function DiscoverPage({
       <div className="border-b border-rule bg-surface-2">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 md:px-8">
           <Link
-            href="/gate?to=member"
+            href="/for-members"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-accent"
           >
             {t("gateSwitchToMember")}

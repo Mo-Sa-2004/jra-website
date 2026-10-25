@@ -1,21 +1,25 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { ArrowUpRight, Store, Users2 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 
 /**
- * The homepage's only content: two large photo tiles splitting the site by
- * audience, the same "pick your path" device rans.ca uses (For Foodie / For
- * Business). JRA's site carries both audiences — the public looking for a
- * restaurant, and restaurant/hospitality businesses dealing with the
- * association — so this is a real hard gate: `[locale]/page.tsx` renders
- * nothing else, and `middleware.ts` skips straight past it for a returning
- * visitor who already picked a side (see `[locale]/gate/route.ts`, which
- * each tile links to).
+ * The homepage's only content: two tiles splitting the site by audience —
+ * matching the composition of rans.ca's own gate (a photo tile, a bold
+ * centred title, a divider rule, then a row of sub-links), not just the
+ * idea of one. `[locale]/page.tsx` renders nothing else.
  *
- * Square flat tiles rather than rans.ca's circles — circles don't appear
- * anywhere else in this design system, and introducing the shape in one
- * spot would read as a different site bolted on rather than the same
- * system flexing.
+ * Plain next-intl `Link`s throughout, no cookie and no middleware redirect
+ * (an earlier version remembered the choice and skipped the gate on return
+ * visits — removed because it broke the browser back button: landing back
+ * on "/" after choosing a side would immediately bounce you forward again).
+ * So every visit to "/" shows the gate, same as rans.ca, and back/forward
+ * both behave like any other link.
+ *
+ * Each tile is two separate link regions rather than one big anchor: the
+ * photo+title opens that audience's homepage, and the three sub-links below
+ * it jump straight to a specific page within that side — matching rans.ca,
+ * where "Restaurants / Events / Trends" and "Industry / Members /
+ * Operations" are real deep links, not decoration.
  */
 export async function AudienceGate({
   dinerImage,
@@ -25,74 +29,85 @@ export async function AudienceGate({
   memberImage: { url: string; alt: string } | null;
 }) {
   const t = await getTranslations("home");
+  const tNav = await getTranslations("nav");
 
   const tiles = [
     {
       key: "diner",
-      href: "/gate?to=diner",
-      Icon: Store,
+      href: "/discover",
       title: t("gateDinerTitle"),
-      subtitle: t("gateDinerSubtitle"),
       image: dinerImage,
+      links: [
+        { label: tNav("restaurants"), href: "/restaurants" },
+        { label: tNav("news"), href: "/news" },
+        { label: t("siyahaJobs"), href: "/jobs" },
+      ],
     },
     {
       key: "member",
-      href: "/gate?to=member",
-      Icon: Users2,
+      href: "/for-members",
       title: t("gateMemberTitle"),
-      subtitle: t("gateMemberSubtitle"),
       image: memberImage,
+      links: [
+        { label: tNav("membership"), href: "/membership" },
+        { label: tNav("suppliers"), href: "/suppliers" },
+        { label: tNav("training"), href: "/training" },
+      ],
     },
   ] as const;
 
   return (
-    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-canvas-deep">
-      <div className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 md:px-8">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-brass">
+    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-surface-2">
+      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 md:px-8">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           {t("gateKicker")}
         </p>
-        <h1 className="mt-3 text-center font-editorial text-[clamp(1.9rem,4.5vw,3rem)] font-semibold leading-tight text-white rtl:font-display">
+        <h1 className="mt-2 text-center font-editorial text-[clamp(1.6rem,3.5vw,2.25rem)] font-semibold leading-tight text-ink rtl:font-display">
           {t("gateTitle")}
         </h1>
 
-        <div className="stagger mt-10 grid gap-4 sm:grid-cols-2">
-          {tiles.map(({ key, href, Icon, title, subtitle, image }) => (
-            // Plain <a>, not next-intl's Link: this needs to hit the route
-            // handler (a GET that sets a cookie and redirects) rather than
-            // a client-side route transition.
-            <a
-              key={key}
-              href={href}
-              className="motion-card group relative flex h-[300px] flex-col justify-end overflow-hidden rounded-3xl border border-white/15 p-6 sm:h-[380px] sm:p-8 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              {image ? (
-                <Image
-                  src={image.url}
-                  alt={image.alt}
-                  fill
-                  sizes="(min-width: 640px) 50vw, 100vw"
-                  priority
-                  className="motion-card-image object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-canvas-deep-2 to-canvas-deep" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/5" />
+        <div className="relative mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-rule bg-rule">
+          {tiles.map(({ key, href, title, image, links }) => (
+            <div key={key} className="flex flex-col bg-surface">
+              <Link href={href} className="motion-card group relative block h-[180px] overflow-hidden sm:h-[240px]">
+                {image ? (
+                  <Image
+                    src={image.url}
+                    alt={image.alt}
+                    fill
+                    sizes="(min-width: 640px) 50vw, 50vw"
+                    priority
+                    className="motion-card-image object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-surface-2" />
+                )}
+                {/* Light wash rather than a dark scrim — the title sits on
+                    top in dark ink, not white, so the photo needs to read
+                    as background texture rather than a lit subject. */}
+                <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/75 to-paper/40" />
+                <span className="absolute inset-x-2 bottom-3 text-center font-display text-base font-bold text-ink sm:text-xl md:text-2xl">
+                  {title}
+                </span>
+              </Link>
 
-              <span className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm">
-                <Icon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <h2 className="relative mt-4 font-display text-2xl font-semibold text-white sm:text-3xl">
-                {title}
-              </h2>
-              <p className="relative mt-2 max-w-sm text-sm leading-relaxed text-white/75">
-                {subtitle}
-              </p>
-              <span className="relative mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-white">
-                {t("gateCta")}
-                <ArrowUpRight className="cta-arrow h-3.5 w-3.5 rtl:-scale-x-100" aria-hidden="true" />
-              </span>
-            </a>
+              <nav
+                aria-label={title}
+                className="flex flex-1 items-center justify-center gap-1.5 border-t border-rule px-2 py-3 text-center sm:gap-2.5 sm:py-4"
+              >
+                {links.map((link, i) => (
+                  <span key={link.href} className="flex items-center gap-1.5 sm:gap-2.5">
+                    {i > 0 ? <span className="text-ink-faint" aria-hidden="true">|</span> : null}
+                    <Link
+                      href={link.href}
+                      className="text-[11px] font-semibold text-ink-soft transition-colors hover:text-accent sm:text-xs"
+                    >
+                      {link.label}
+                    </Link>
+                  </span>
+                ))}
+              </nav>
+            </div>
           ))}
         </div>
       </div>

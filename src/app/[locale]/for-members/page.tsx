@@ -166,7 +166,7 @@ export default async function ForMembersPage({
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-white/75">{t("forMembersSubtitle")}</p>
           <Link
-            href="/gate?to=diner"
+            href="/discover"
             className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white"
           >
             {t("gateSwitchToDiner")}

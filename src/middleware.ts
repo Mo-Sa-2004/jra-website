@@ -41,20 +41,6 @@ export default auth((req) => {
     }
   }
 
-  // Audience gate: a first-time visitor to the bare homepage sees the two
-  // "Find a Restaurant" / "For Members" tiles (src/app/[locale]/page.tsx).
-  // Once they've picked a side once (cookie set by /[locale]/gate), skip
-  // straight to that side's own homepage instead of showing the tiles again.
-  // Only the bare homepage redirects — a deep link like /restaurants or
-  // /membership always works regardless of which side was chosen.
-  if (!area) {
-    const audience = req.cookies.get("jra_audience")?.value;
-    if (audience === "diner" || audience === "member") {
-      const target = audience === "diner" ? "discover" : "for-members";
-      return NextResponse.redirect(new URL(`/${locale}/${target}`, req.nextUrl.origin));
-    }
-  }
-
   return intlMiddleware(req);
 });
 
