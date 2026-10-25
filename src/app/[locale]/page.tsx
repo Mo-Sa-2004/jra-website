@@ -12,8 +12,10 @@ import {
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/cover-thumb";
 import { NewMemberBanner, type BannerRestaurant } from "@/components/home/new-member-banner";
+import { SearchCuisineBand } from "@/components/home/search-cuisine-band";
 import { ReachUs } from "@/components/home/reach-us";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { StatGrid } from "@/components/stat-grid";
 import { db } from "@/lib/db";
 import { ORG } from "@/lib/organisation";
 
@@ -30,12 +32,23 @@ export const revalidate = 300;
  * added back afterward at the client's own request for a fuller, more
  * professional-feeling homepage — both already existed in the codebase
  * (built for the previous homepage) and needed no rework beyond the usual
- * token colors to fit back in. The previous homepage's marketing hero,
- * services band, stats band, featured-restaurants grid and partner strip
- * are still not here — the doc is explicit the page should not carry a
- * second restaurant grid or a standalone training section below the fold,
- * and partner strip's links mostly duplicate the Quick Access grid above.
- * Those three (PartnerStrip, HomeHero, and the old stats/services bands)
+ * token colors to fit back in.
+ *
+ * Search + cuisine browse and the stats band were added after that, when
+ * the client pointed at rans.ca as a "make it feel alive" reference and
+ * asked for more of that site's real-photography, browsable feel. The old
+ * marketing hero itself (HomeHero, a second full-bleed photo section with
+ * its own search bar) is deliberately NOT restored here: the New Member
+ * Banner right above already is a full-bleed, real-photography section —
+ * its own doc comment says it "replaces the previous marketing hero
+ * entirely" — so stacking the old hero under it would just repeat that
+ * beat. SearchCuisineBand carries forward only what the old hero had that
+ * the banner doesn't (search, cuisine browse) as a dark band directly
+ * under the carousel, reading as one continuous opening rather than two
+ * separate hero sections. The services band and partner strip are still
+ * not here — partner strip's links mostly duplicate the Quick Access grid
+ * above, and two of the services band's four cards (Directory,
+ * Classification) would have duplicated it too. HomeHero and PartnerStrip
  * are left in the codebase rather than deleted, in case they belong
  * elsewhere later.
  */
@@ -53,7 +66,15 @@ export default async function HomePage({
 
   const sevenDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
 
-  const [newMembers, latestNews, upcomingEvents] = await Promise.all([
+  const [
+    newMembers,
+    latestNews,
+    upcomingEvents,
+    restaurantCount,
+    supplierCount,
+    representedGovernorates,
+    cuisineRows,
+  ] = await Promise.all([
     // "02 Dynamic New-Member Restaurants Banner": the newest approved
     // restaurants, newest first — real membership data, not stock photography.
     db.restaurant.findMany({
@@ -77,7 +98,37 @@ export default async function HomePage({
       take: 4,
       include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
+    db.restaurant.count({ where: { status: "PUBLISHED" } }),
+    db.supplier.count({ where: { status: "PUBLISHED" } }),
+    db.restaurant.findMany({
+      where: { status: "PUBLISHED", governorateId: { not: null } },
+      distinct: ["governorateId"],
+      select: { governorateId: true },
+    }),
+    db.cuisine.findMany({
+      select: {
+        slug: true,
+        nameEn: true,
+        nameAr: true,
+        _count: { select: { restaurants: true } },
+      },
+    }),
   ]);
+
+  const totalMembers = restaurantCount + supplierCount;
+  const governorateCount = representedGovernorates.length;
+
+  // Top cuisines by member count. Empty ones are dropped rather than shown
+  // as zeroes — the strip is meant to read as range, not as a gap report.
+  const browseCuisines = cuisineRows
+    .filter((c) => c._count.restaurants > 0)
+    .sort((a, b) => b._count.restaurants - a._count.restaurants)
+    .slice(0, 8)
+    .map((c) => ({
+      slug: c.slug,
+      label: (locale === "ar" && c.nameAr ? c.nameAr : c.nameEn) ?? c.slug,
+      count: c._count.restaurants,
+    }));
 
   const bannerRestaurants: BannerRestaurant[] = newMembers.map((r) => ({
     slug: r.slug,
@@ -172,6 +223,8 @@ export default async function HomePage({
     <div>
       <NewMemberBanner restaurants={bannerRestaurants} />
 
+      <SearchCuisineBand cuisines={browseCuisines} restaurantCount={restaurantCount} />
+
       {/* Quick Access — exactly 6 cards, one row on desktop, 3x2 on tablet,
           2x3 on mobile. The handover doc asks explicitly for no slider here. */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:px-8">
@@ -204,6 +257,22 @@ export default async function HomePage({
             );
           })}
         </div>
+      </section>
+
+      {/* Stats — real figures, not stock claims of scale. divide-x rather
+          than a border per card: four numbers reading as one strip, not
+          four boxes competing for attention. Same StatGrid component the
+          About page uses, "plain" variant. */}
+      <section className="border-y border-rule">
+        <StatGrid
+          className="mx-auto max-w-7xl grid-cols-2 divide-x divide-rule px-4 py-12 sm:grid-cols-4 sm:px-6 md:px-8 rtl:divide-x-reverse"
+          stats={[
+            { value: totalMembers, label: t("statMembers"), suffix: "+" },
+            { value: restaurantCount, label: t("statRestaurants") },
+            { value: governorateCount, label: t("statGovernorates") },
+            { value: ORG.foundingYear, label: t("statFounded"), animate: false },
+          ]}
+        />
       </section>
 
       {/* News & Events — one combined section: a featured item, then a
