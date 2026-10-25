@@ -35,6 +35,8 @@
     "seed:amenity-ar": "tsx prisma/seed/16-amenity-arabic-names.ts",
     "seed:standards": "tsx prisma/seed/17-remaining-standards.ts",
     "seed:levels": "tsx prisma/seed/18-classification-levels.ts",
+    "seed:documents": "tsx prisma/seed/20-document-migration.ts",
+    "prod:documents": "dotenv -e .env.production.local -- tsx prisma/seed/20-document-migration.ts",
     "i18n:fill": "node scripts/i18n-fill.mjs",
     "i18n:check": "vitest run src/lib/messages.test.ts"
   },
