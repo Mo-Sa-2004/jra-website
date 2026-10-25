@@ -114,7 +114,12 @@
     "quickAccessTitle": "كيف نقدر نساعدك؟",
     "newsEventsTitle": "آخر الأخبار والفعاليات",
     "featured": "أبرز الأخبار",
-    "siyahaJobs": "سياحة جوبز"
+    "siyahaJobs": "سياحة جوبز",
+    "gateDinerTitle": "ابحث عن مطعم",
+    "gateDinerSubtitle": "تصفّح أكثر من 700 مطعم ومقهى ومنشأة مصنّفة في جميع أنحاء الأردن.",
+    "gateMemberTitle": "للأعضاء",
+    "gateMemberSubtitle": "التصنيف والتدريب والموارد القانونية وكل ما يحتاجه مشغّلو المطاعم وقطاع الضيافة.",
+    "gateCta": "استكشف"
   },
   "footer": {
     "tagline": "شبكة واحدة، صوت واحد، فرص لا محدودة.",

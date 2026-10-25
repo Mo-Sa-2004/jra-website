@@ -114,7 +114,12 @@
     "quickAccessTitle": "How can we help?",
     "newsEventsTitle": "Latest News & Events",
     "featured": "Featured",
-    "siyahaJobs": "SiyahaJobs"
+    "siyahaJobs": "SiyahaJobs",
+    "gateDinerTitle": "Find a Restaurant",
+    "gateDinerSubtitle": "Search 700+ classified restaurants, cafés and venues across Jordan.",
+    "gateMemberTitle": "For Members",
+    "gateMemberSubtitle": "Classification, training, legal resources and everything for restaurant and hospitality operators.",
+    "gateCta": "Explore"
   },
   "footer": {
     "tagline": "One network. One voice. Endless opportunities.",

@@ -13,6 +13,7 @@ import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/cover-thumb";
 import { NewMemberBanner, type BannerRestaurant } from "@/components/home/new-member-banner";
 import { SearchCuisineBand } from "@/components/home/search-cuisine-band";
+import { AudienceGate } from "@/components/home/audience-gate";
 import { ReachUs } from "@/components/home/reach-us";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { StatGrid } from "@/components/stat-grid";
@@ -138,6 +139,17 @@ export default async function HomePage({
     isNew: r.createdAt >= sevenDaysAgo,
   }));
 
+  // Two distinct real member photos for the audience-gate tiles, rather
+  // than stock imagery — pulled from the same pool the carousel above
+  // already uses, just two different restaurants so the tiles don't repeat
+  // the banner's current photo.
+  const gateImage = (r: (typeof newMembers)[number] | undefined) =>
+    r?.images[0]?.url
+      ? { url: r.images[0].url, alt: (locale === "ar" && r.nameAr) || r.name }
+      : null;
+  const dinerImage = gateImage(newMembers[0]);
+  const memberImage = gateImage(newMembers[1]) ?? gateImage(newMembers[0]);
+
   // "03 Quick Access – 6 services", in the exact order the handover
   // specifies. Member Portal and SiyahaJobs are the two that hand off to
   // another system rather than a page on this site.
@@ -223,6 +235,10 @@ export default async function HomePage({
     <div>
       <NewMemberBanner restaurants={bannerRestaurants} />
 
+      {/* TEMP: both options rendered back to back for comparison while this
+          is under review — tell Claude which one (or neither, or both) to
+          keep and the other comes out before this merges. */}
+      <AudienceGate dinerImage={dinerImage} memberImage={memberImage} />
       <SearchCuisineBand cuisines={browseCuisines} restaurantCount={restaurantCount} />
 
       {/* Quick Access — exactly 6 cards, one row on desktop, 3x2 on tablet,
