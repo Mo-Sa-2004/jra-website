@@ -6,47 +6,55 @@ type GateImage = { url: string; alt: string } | null;
 
 /**
  * Cells without a real photo yet (not every restaurant/supplier has one on
- * file) used to fall back to a flat, empty-looking panel — the client's
- * reaction was that it just read as broken, not deliberate. These give an
- * empty cell a soft blue/white/pink wash instead — the client's requested
- * palette for this page specifically, not the site's general brand colors,
- * so it stays scoped to the gate rather than bleeding into the rest of the
- * design system. Cycled by index so a run of empty cells in the same tile
- * doesn't read as one flat block.
+ * file) fall back to a soft wash instead of a flat empty panel — a blank
+ * grey square read as broken rather than deliberate. Blue/white/gray is the
+ * client's palette for this page specifically (confirmed in the October
+ * 2026 client meeting, replacing an earlier blue/white/pink pass once pink
+ * was ruled out), not the site's general brand colors, so it stays scoped
+ * to the gate rather than bleeding into the rest of the design system.
+ * Cycled by index so a run of empty cells in the same tile doesn't read as
+ * one flat block.
  */
 const EMPTY_CELL_TINTS = [
-  "bg-gradient-to-br from-blue-100 via-white to-pink-100",
-  "bg-gradient-to-tr from-pink-100 via-white to-blue-100",
-  "bg-gradient-to-b from-blue-50 via-white to-pink-50",
+  "bg-gradient-to-br from-blue-100 via-white to-gray-200",
+  "bg-gradient-to-tr from-gray-200 via-white to-blue-100",
+  "bg-gradient-to-b from-blue-50 via-white to-gray-100",
 ] as const;
 
 /**
- * The homepage's only content: two tiles splitting the site by audience —
- * matching the composition of rans.ca's own gate (a photo tile, a bold
- * centred title, a divider rule, then a row of sub-links), not just the
- * idea of one. `[locale]/page.tsx` renders nothing else.
+ * The homepage's only content: two tiles splitting the site by audience,
+ * built to match rans.ca's own gate — per the client's October 2026
+ * direction, literally "copy the exact same design" of
+ * https://rans.ca/, in JRA's own colors (blue/white/gray, no pink).
+ * `[locale]/page.tsx` renders nothing else.
  *
- * Each tile's artwork is a small grid of real member photos (a "wall" of up
- * to 6 real restaurants on the foodie tile, real suppliers/businesses on
- * the member tile) rather than one single photo stretched across the whole
- * tile. Two reasons: it matches the multi-photo collage look the client
- * pointed to as a reference, and a grid of small cells hides a low-res
- * source photo (plenty of member photos on file are closer to a logo than a
- * venue shot) far better than one giant crop does — same fix applied to the
- * `/discover` hero banner, see `new-member-banner.tsx`.
+ * rans.ca's cards are two separate floating cards (real gap between them,
+ * each independently rounded and shadowed) rather than one shared strip
+ * split by a divider — that's the one deliberate break from the rest of
+ * the site's flat, shadow-free card system (see globals.css), kept scoped
+ * to this component to match the reference. Each card is a photo with a
+ * circular logo seal centered on it (rans.ca uses "DINE NOVA SCOTIA" /
+ * "RANS" sub-brand seals; JRA has no equivalent sub-brands, so both tiles
+ * use JRA's own icon mark — same logo, not two invented identities), a
+ * bold title below the photo, then a row of sub-links.
+ *
+ * The photo itself is still the 6-cell grid of real member photos (not a
+ * single photo like rans.ca) — that was the fix for low-res source photos
+ * blurring when stretched full-bleed (see the commit history on this
+ * file), and reverting to one photo per card would reopen that problem.
+ * The grid still reads as "a wall of real places" under the seal, which is
+ * close enough to the reference's intent without the blur risk.
  *
  * Plain next-intl `Link`s throughout, no cookie and no middleware redirect
  * (an earlier version remembered the choice and skipped the gate on return
- * visits — removed because it broke the browser back button: landing back
- * on "/" after choosing a side would immediately bounce you forward again).
- * So every visit to "/" shows the gate, same as rans.ca, and back/forward
- * both behave like any other link.
+ * visits — removed because it broke the browser back button). Every visit
+ * to "/" shows the gate, and back/forward both behave like any other link.
  *
- * Each tile is two separate link regions rather than one big anchor: the
- * photo grid+title opens that audience's homepage, and the three sub-links
- * below it jump straight to a specific page within that side — matching
- * rans.ca, where "Restaurants / Events / Trends" and "Industry / Members /
- * Operations" are real deep links, not decoration.
+ * Each tile is two separate link regions: the photo+seal+title opens that
+ * audience's homepage, and the three sub-links below it jump straight to a
+ * specific page within that side — matching rans.ca's own "Restaurants /
+ * Events / Trends" and "Industry / Members / Operations" rows, which are
+ * real deep links, not decoration.
  */
 export async function AudienceGate({
   dinerImages,
@@ -84,7 +92,7 @@ export async function AudienceGate({
   ] as const;
 
   return (
-    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
+    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-gradient-to-br from-blue-50 via-white to-gray-100">
       <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 md:px-8">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           {t("gateKicker")}
@@ -93,36 +101,60 @@ export async function AudienceGate({
           {t("gateTitle")}
         </h1>
 
-        <div className="relative mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-rule bg-rule">
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
           {tiles.map(({ key, href, title, images, links }) => {
             const cells: GateImage[] = Array.from({ length: 6 }, (_, i) => images[i] ?? null);
             return (
-              <div key={key} className="flex flex-col bg-surface">
-                <Link href={href} className="motion-card group block overflow-hidden">
+              <div
+                key={key}
+                className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-xl shadow-blue-950/10 ring-1 ring-black/5 transition-transform duration-300 hover:-translate-y-1"
+              >
+                <Link href={href} className="group block overflow-hidden">
                   {/* Full-color photo grid, no wash — a faded, veiled version
                       of real member photos looked worse than the blur it
                       was meant to fix. The title gets its own plain block
-                      below instead of fighting the photos for contrast. */}
-                  <div className="grid h-[160px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-rule sm:h-[200px]">
-                    {cells.map((image, i) => (
-                      <div
-                        key={i}
-                        className={`relative overflow-hidden ${
-                          image ? "bg-surface-2" : EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]
-                        }`}
-                      >
-                        {image ? (
-                          <Image
-                            src={image.url}
-                            alt=""
-                            fill
-                            sizes="(min-width: 640px) 17vw, 17vw"
-                            priority={i === 0}
-                            className="motion-card-image object-cover"
-                          />
-                        ) : null}
+                      below instead of fighting the photos for contrast.
+                      `relative` lives on this wrapper, not the outer Link,
+                      so the seal below centers on the photo area only —
+                      not the title text underneath it too. */}
+                  <div className="relative">
+                    <div className="grid h-[180px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-gray-200 sm:h-[220px]">
+                      {cells.map((image, i) => (
+                        <div
+                          key={i}
+                          className={`relative overflow-hidden ${
+                            image ? "bg-gray-100" : EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]
+                          }`}
+                        >
+                          {image ? (
+                            <Image
+                              src={image.url}
+                              alt=""
+                              fill
+                              sizes="(min-width: 640px) 17vw, 17vw"
+                              priority={i === 0}
+                              className="motion-card-image object-cover"
+                            />
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Circular seal, centered over the photo — rans.ca's
+                        own composition (a round sub-brand badge over the
+                        hero photo). JRA's square-ish icon mark stands in
+                        for the sub-brand logo rans.ca uses there. */}
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white p-3 shadow-md ring-1 ring-black/5 sm:h-20 sm:w-20">
+                        <Image
+                          src="/brand/jra-mark.png"
+                          alt=""
+                          width={68}
+                          height={61}
+                          className="h-auto w-full object-contain"
+                        />
                       </div>
-                    ))}
+                    </div>
                   </div>
                   <p className="px-3 pb-1 pt-4 text-center font-display text-lg font-bold text-ink sm:text-xl md:text-2xl">
                     {title}
@@ -131,11 +163,11 @@ export async function AudienceGate({
 
                 <nav
                   aria-label={title}
-                  className="flex flex-1 items-center justify-center gap-1.5 border-t border-rule px-2 py-3 text-center sm:gap-2.5 sm:py-4"
+                  className="flex flex-1 items-center justify-center gap-1.5 border-t border-gray-100 px-2 py-3 text-center sm:gap-2.5 sm:py-4"
                 >
                   {links.map((link, i) => (
                     <span key={link.href} className="flex items-center gap-1.5 sm:gap-2.5">
-                      {i > 0 ? <span className="text-ink-faint" aria-hidden="true">|</span> : null}
+                      {i > 0 ? <span className="text-gray-300" aria-hidden="true">|</span> : null}
                       <Link
                         href={link.href}
                         className="text-[11px] font-semibold text-ink-soft transition-colors hover:text-accent sm:text-xs"
