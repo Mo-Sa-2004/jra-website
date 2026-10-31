@@ -5,6 +5,22 @@ import { Link } from "@/i18n/navigation";
 type GateImage = { url: string; alt: string } | null;
 
 /**
+ * Cells without a real photo yet (not every restaurant/supplier has one on
+ * file) used to fall back to a flat, empty-looking panel — the client's
+ * reaction was that it just read as broken, not deliberate. These give an
+ * empty cell a soft blue/white/pink wash instead — the client's requested
+ * palette for this page specifically, not the site's general brand colors,
+ * so it stays scoped to the gate rather than bleeding into the rest of the
+ * design system. Cycled by index so a run of empty cells in the same tile
+ * doesn't read as one flat block.
+ */
+const EMPTY_CELL_TINTS = [
+  "bg-gradient-to-br from-blue-100 via-white to-pink-100",
+  "bg-gradient-to-tr from-pink-100 via-white to-blue-100",
+  "bg-gradient-to-b from-blue-50 via-white to-pink-50",
+] as const;
+
+/**
  * The homepage's only content: two tiles splitting the site by audience —
  * matching the composition of rans.ca's own gate (a photo tile, a bold
  * centred title, a divider rule, then a row of sub-links), not just the
@@ -68,7 +84,7 @@ export async function AudienceGate({
   ] as const;
 
   return (
-    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-surface-2">
+    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
       <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 md:px-8">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           {t("gateKicker")}
@@ -82,10 +98,19 @@ export async function AudienceGate({
             const cells: GateImage[] = Array.from({ length: 6 }, (_, i) => images[i] ?? null);
             return (
               <div key={key} className="flex flex-col bg-surface">
-                <Link href={href} className="motion-card group relative block h-[180px] overflow-hidden sm:h-[240px]">
-                  <div className="grid h-full grid-cols-3 grid-rows-2 gap-px bg-rule">
+                <Link href={href} className="motion-card group block overflow-hidden">
+                  {/* Full-color photo grid, no wash — a faded, veiled version
+                      of real member photos looked worse than the blur it
+                      was meant to fix. The title gets its own plain block
+                      below instead of fighting the photos for contrast. */}
+                  <div className="grid h-[160px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-rule sm:h-[200px]">
                     {cells.map((image, i) => (
-                      <div key={i} className="relative overflow-hidden bg-surface-2">
+                      <div
+                        key={i}
+                        className={`relative overflow-hidden ${
+                          image ? "bg-surface-2" : EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]
+                        }`}
+                      >
                         {image ? (
                           <Image
                             src={image.url}
@@ -99,13 +124,9 @@ export async function AudienceGate({
                       </div>
                     ))}
                   </div>
-                  {/* Light wash rather than a dark scrim — the title sits on
-                      top in dark ink, not white, so the photo grid needs to
-                      read as background texture rather than a lit subject. */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-paper via-paper/75 to-paper/40" />
-                  <span className="absolute inset-x-2 bottom-3 text-center font-display text-base font-bold text-ink sm:text-xl md:text-2xl">
+                  <p className="px-3 pb-1 pt-4 text-center font-display text-lg font-bold text-ink sm:text-xl md:text-2xl">
                     {title}
-                  </span>
+                  </p>
                 </Link>
 
                 <nav
