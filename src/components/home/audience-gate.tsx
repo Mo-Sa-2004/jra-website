@@ -5,6 +5,22 @@ import { Link } from "@/i18n/navigation";
 type GateImage = { url: string; alt: string } | null;
 
 /**
+ * Cells without a real photo yet (not every restaurant/supplier has one on
+ * file) used to fall back to a flat, empty-looking panel — the client's
+ * reaction was that it just read as broken, not deliberate. These give an
+ * empty cell a soft blue/white/pink wash instead — the client's requested
+ * palette for this page specifically, not the site's general brand colors,
+ * so it stays scoped to the gate rather than bleeding into the rest of the
+ * design system. Cycled by index so a run of empty cells in the same tile
+ * doesn't read as one flat block.
+ */
+const EMPTY_CELL_TINTS = [
+  "bg-gradient-to-br from-blue-100 via-white to-pink-100",
+  "bg-gradient-to-tr from-pink-100 via-white to-blue-100",
+  "bg-gradient-to-b from-blue-50 via-white to-pink-50",
+] as const;
+
+/**
  * The homepage's only content: two tiles splitting the site by audience —
  * matching the composition of rans.ca's own gate (a photo tile, a bold
  * centred title, a divider rule, then a row of sub-links), not just the
@@ -68,7 +84,7 @@ export async function AudienceGate({
   ] as const;
 
   return (
-    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-surface-2">
+    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-gradient-to-br from-blue-50 via-white to-pink-50">
       <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 md:px-8">
         <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           {t("gateKicker")}
@@ -89,7 +105,12 @@ export async function AudienceGate({
                       below instead of fighting the photos for contrast. */}
                   <div className="grid h-[160px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-rule sm:h-[200px]">
                     {cells.map((image, i) => (
-                      <div key={i} className="relative overflow-hidden bg-surface-2">
+                      <div
+                        key={i}
+                        className={`relative overflow-hidden ${
+                          image ? "bg-surface-2" : EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]
+                        }`}
+                      >
                         {image ? (
                           <Image
                             src={image.url}
