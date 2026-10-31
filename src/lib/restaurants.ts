@@ -9,6 +9,7 @@ function toCardData(r: {
   nameAr: string | null;
   shortDescription: string | null;
   phone?: string | null;
+  addressText?: string | null;
   openingHoursText?: string | null;
   priceTier: PriceTier;
   images: { url: string; isPrimary: boolean }[];
@@ -38,6 +39,14 @@ function toCardData(r: {
     cuisineNameAr: r.cuisines[0]?.cuisine.nameAr ?? null,
     stars: r.classificationLevel?.stars ?? null,
     priceTier: r.priceTier,
+    // The directory card now shows these directly as plain text (not a
+    // `tel:` link -- the whole card is already a link to the detail page,
+    // and a link can't nest inside another link) rather than the old
+    // yes/no "Phone listed" badge that was removed as unactionable. An
+    // actual number someone can read is a different, useful thing from a
+    // flag saying one exists.
+    phone: r.phone ?? null,
+    addressText: r.addressText ?? null,
     hasPhone: Boolean(r.phone),
     hasHours: Boolean(r.openingHoursText),
   };
@@ -63,7 +72,9 @@ export async function getFeaturedRestaurants(limit = 6) {
 export type RestaurantFilters = {
   q?: string;
   governorate?: string;
-  cuisine?: string;
+  /** Multiple cuisines OR together -- the sidebar is a checkbox list, not a
+   *  single-select dropdown anymore. */
+  cuisine?: string[];
   stars?: number;
   page?: number;
 };
@@ -82,7 +93,9 @@ export async function searchRestaurants(filters: RestaurantFilters) {
         }
       : {}),
     ...(filters.governorate ? { governorate: { slug: filters.governorate } } : {}),
-    ...(filters.cuisine ? { cuisines: { some: { cuisine: { slug: filters.cuisine } } } } : {}),
+    ...(filters.cuisine && filters.cuisine.length > 0
+      ? { cuisines: { some: { cuisine: { slug: { in: filters.cuisine } } } } }
+      : {}),
     ...(filters.stars ? { classificationLevel: { stars: filters.stars } } : {}),
   };
 

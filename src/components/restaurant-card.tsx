@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import type { PriceTier } from "@prisma/client";
-import { MapPin, ArrowRight, Star } from "lucide-react";
+import { MapPin, ArrowRight, Star, Phone } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cx } from "@/lib/ui";
 
@@ -23,18 +23,28 @@ export type RestaurantCardData = {
   cuisineNameAr?: string | null;
   stars: number | null;
   priceTier: PriceTier;
-  /** Signals below — the directory now holds real contact data for ~65%. */
-  /** No longer rendered on the card — see the note where the row was
-   *  removed. Kept on the type so `getFeaturedRestaurants` and the
-   *  directory query need not change in the same commit. */
+  /**
+   * The real phone number and address, not just a yes/no flag -- see
+   * `hasPhone`/`hasHours` below for why a boolean badge was removed
+   * earlier. The directory now holds real contact data for ~65% of
+   * listings, so most cards render these; the rest render without them.
+   */
+  phone: string | null;
+  addressText: string | null;
+  /** No longer rendered on the card — kept on the type so
+   *  `getFeaturedRestaurants` and the directory query need not change in
+   *  the same commit. */
   hasPhone?: boolean;
   hasHours?: boolean;
 };
 
+// Blue/gray only, not the full design-system palette (olive, brass) --
+// scoped to the directory's own blue/white/gray treatment rather than the
+// site's general brand colors, same reasoning as the gate's EMPTY_CELL_TINTS.
 const PLACEHOLDER_HUES = [
   "from-accent/25 to-accent/5",
-  "from-olive/25 to-olive/5",
-  "from-brass/30 to-brass/5",
+  "from-gray-300/60 to-gray-100/40",
+  "from-accent/15 to-gray-200/50",
 ];
 
 function placeholderGradient(seed: string) {
@@ -51,6 +61,8 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
 
   const governorate = (ar && restaurant.governorateNameAr) || restaurant.governorateName;
   const cuisine = (ar && restaurant.cuisineNameAr) || restaurant.cuisineName;
+  const phone = restaurant.phone;
+  const address = restaurant.addressText;
   const priceLabel = restaurant.priceTier !== "UNKNOWN" ? tPriceTier(restaurant.priceTier) : null;
   const cover = restaurant.coverImageUrl;
   const logo = restaurant.imageUrl;
@@ -130,10 +142,22 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
           {displayName}
         </h3>
 
-        {governorate ? (
+        {/* Real contact signals, not the old yes/no badge -- a number and
+            an address someone can actually use, same as every card on the
+            reference directory. Plain text rather than a `tel:` link: the
+            whole card is already one big link to the detail page, and a
+            link can't nest inside another link. */}
+        {phone ? (
+          <p className="mt-1.5 flex items-center gap-1.5 truncate text-sm text-ink-soft" dir="ltr">
+            <Phone className="h-3.5 w-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
+            {phone}
+          </p>
+        ) : null}
+
+        {address || governorate ? (
           <p className="mt-1.5 flex items-center gap-1.5 truncate text-sm text-ink-soft">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
-            {governorate}
+            {address || governorate}
           </p>
         ) : null}
 
@@ -145,7 +169,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
               </span>
             ) : null}
             {priceLabel ? (
-              <span className="rounded-full bg-brass-soft px-2.5 py-1 text-xs font-medium text-brass-text">
+              <span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft">
                 {priceLabel}
               </span>
             ) : null}

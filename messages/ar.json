@@ -217,7 +217,15 @@
     "priceRange": "الفئة السعرية",
     "hasPhone": "رقم هاتف متاح",
     "hasHours": "ساعات العمل متاحة",
-    "photoAlt": "صورة {number} من {name}"
+    "photoAlt": "صورة {number} من {name}",
+    "heroTitle": "ابحث عن مطعم",
+    "findLabel": "ابحث",
+    "findPlaceholder": "اسم المطعم أو نوع المطبخ",
+    "nearLabel": "بالقرب من",
+    "findButton": "بحث",
+    "cityLabel": "المدينة",
+    "typeOfCuisineLabel": "نوع المطبخ",
+    "restaurantNameLabel": "اسم المطعم"
   },
   "suppliers": {
     "description": "دليل الأعضاء المنتسبين — شركات توريد الأغذية والمعدات والتقنية والخدمات لمطاعم الجمعية.",

@@ -5,14 +5,27 @@ import { useTranslations } from "next-intl";
 import { Check, Loader2, AlertCircle } from "lucide-react";
 import { subscribeToNewsletter } from "@/lib/actions/newsletter";
 
-export function NewsletterForm() {
+/**
+ * `tone="ink"` (default) is the original dark `bg-ink` section this form
+ * was built for (see the homepage newsletter block). `tone="accent"` is a
+ * second palette for a form sitting on a blue band instead -- the
+ * restaurant directory's promo strip, which matches the client's reference
+ * directory in shape but needed JRA's own blue rather than the reference's
+ * pink/yellow, so the field and button swap to stay legible against blue
+ * instead of fighting it.
+ */
+export function NewsletterForm({ tone = "ink" }: { tone?: "ink" | "accent" }) {
   const t = useTranslations("home");
   const tf = useTranslations("newsletterForm");
   const [state, formAction, pending] = useActionState(subscribeToNewsletter, { ok: false });
 
   if (state.ok) {
     return (
-      <div className="mt-6 flex items-center justify-center gap-2 text-olive-soft">
+      <div
+        className={`mt-6 flex items-center justify-center gap-2 ${
+          tone === "accent" ? "text-white" : "text-olive-soft"
+        }`}
+      >
         <Check className="h-5 w-5" />
         <span>{tf("subscribed")}</span>
       </div>
@@ -38,19 +51,32 @@ export function NewsletterForm() {
           required
           placeholder={t("newsletterPlaceholder")}
           aria-invalid={errorMessage ? true : undefined}
-          className="w-full rounded-full border border-paper/25 bg-paper/10 px-4 py-2.5 text-sm text-paper placeholder:text-paper/50 focus:border-brass focus:outline-none"
+          className={
+            tone === "accent"
+              ? "w-full rounded-full border border-white/30 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/60 focus:border-white focus:outline-none"
+              : "w-full rounded-full border border-paper/25 bg-paper/10 px-4 py-2.5 text-sm text-paper placeholder:text-paper/50 focus:border-brass focus:outline-none"
+          }
         />
         <button
           type="submit"
           disabled={pending}
-          className="shrink-0 rounded-full bg-brass px-5 py-2.5 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+          className={
+            tone === "accent"
+              ? "shrink-0 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-accent transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+              : "shrink-0 rounded-full bg-brass px-5 py-2.5 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+          }
         >
           {pending ? <Loader2 className="me-1.5 inline h-3.5 w-3.5 animate-spin align-[-2px]" aria-hidden="true" /> : null}
           {t("newsletterCta")}
         </button>
       </form>
       {errorMessage ? (
-        <p role="alert" className="mt-2 flex items-center justify-center gap-1.5 text-xs text-brass">
+        <p
+          role="alert"
+          className={`mt-2 flex items-center justify-center gap-1.5 text-xs ${
+            tone === "accent" ? "text-white" : "text-brass"
+          }`}
+        >
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {errorMessage}
         </p>
