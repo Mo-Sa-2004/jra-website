@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
@@ -11,7 +13,7 @@ import {
   ExternalLink,
   ArrowUpRight,
 } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { ORG } from "@/lib/organisation";
 
 /**
@@ -77,7 +79,13 @@ const LEGAL_LINKS = [
 
 export function SiteFooter() {
   const t = useTranslations();
+  const pathname = usePathname();
   const year = new Date().getFullYear();
+
+  // The gate page ("/") is a deliberate standalone screen matching
+  // rans.ca, which has no footer at all -- per the client's direction,
+  // this footer is hidden only there and unchanged everywhere else.
+  if (pathname === "/") return null;
 
   return (
     <footer className="relative mt-24 border-t border-rule bg-surface text-ink">

@@ -119,24 +119,17 @@ export async function AudienceGate({
                       not the title text underneath it too. */}
                   <div className="relative">
                     <div className="grid h-[180px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-gray-200 sm:h-[220px]">
-                      {cells.map((image, i) => (
+                      {cells.map((_image, i) => (
+                        // Real member photos are temporarily suppressed here
+                        // per the client's "keep the squares empty for now"
+                        // direction -- every cell renders the tint
+                        // placeholder regardless of whether a photo exists.
+                        // Re-enable by restoring the `image ? <Image .../>`
+                        // branch this replaced.
                         <div
                           key={i}
-                          className={`relative overflow-hidden ${
-                            image ? "bg-gray-100" : EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]
-                          }`}
-                        >
-                          {image ? (
-                            <Image
-                              src={image.url}
-                              alt=""
-                              fill
-                              sizes="(min-width: 640px) 17vw, 17vw"
-                              priority={i === 0}
-                              className="motion-card-image object-cover"
-                            />
-                          ) : null}
-                        </div>
+                          className={`relative overflow-hidden ${EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]}`}
+                        />
                       ))}
                     </div>
 
@@ -145,13 +138,16 @@ export async function AudienceGate({
                         hero photo). JRA's square-ish icon mark stands in
                         for the sub-brand logo rans.ca uses there. */}
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white p-3 shadow-md ring-1 ring-black/5 sm:h-20 sm:w-20">
+                      <div className="relative h-16 w-16 rounded-full bg-white p-3 shadow-md ring-1 ring-black/5 sm:h-20 sm:w-20">
+                        {/* Full wordmark, not just the icon mark -- `fill` +
+                            `object-contain` scales the whole logo down to
+                            fit inside the circle without cropping it. */}
                         <Image
-                          src="/brand/jra-mark.png"
+                          src="/brand/jra-logo.png"
                           alt=""
-                          width={68}
-                          height={61}
-                          className="h-auto w-full object-contain"
+                          fill
+                          sizes="80px"
+                          className="object-contain p-1"
                         />
                       </div>
                     </div>
