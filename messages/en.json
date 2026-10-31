@@ -217,7 +217,15 @@
     "priceRange": "Price range",
     "hasPhone": "Phone listed",
     "hasHours": "Hours listed",
-    "photoAlt": "Photo {number} of {name}"
+    "photoAlt": "Photo {number} of {name}",
+    "heroTitle": "Find a Restaurant",
+    "findLabel": "Find",
+    "findPlaceholder": "Restaurant name, cuisine type",
+    "nearLabel": "Near",
+    "findButton": "Find",
+    "cityLabel": "City",
+    "typeOfCuisineLabel": "Type of Cuisine",
+    "restaurantNameLabel": "Restaurant Name"
   },
   "suppliers": {
     "description": "A directory of associate members — companies supplying food, equipment, technology, and services to JRA restaurants.",
