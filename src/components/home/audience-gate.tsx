@@ -135,15 +135,17 @@ export async function AudienceGate({
 
                     {/* Circular seal, centered over the photo — rans.ca's
                         own composition (a round sub-brand badge over the
-                        hero photo). JRA's square-ish icon mark stands in
-                        for the sub-brand logo rans.ca uses there. */}
+                        hero photo). `jra-mark.png` itself is a tight crop
+                        of just the swirl's right lobe (used elsewhere as a
+                        small favicon-style mark), so it read as cut off
+                        here. `jra-mark-full.png` is the complete swirl,
+                        cropped out of the wordmark lockup (`jra-logo.png`)
+                        with the "JRA | Jordan Restaurant Association" text
+                        dropped — the full icon, no words. */}
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="relative h-16 w-16 rounded-full bg-white p-3 shadow-md ring-1 ring-black/5 sm:h-20 sm:w-20">
-                        {/* Icon mark only, no wordmark text -- `fill` +
-                            `object-contain` scales it to fill the circle
-                            cleanly without stretching or cropping it. */}
                         <Image
-                          src="/brand/jra-mark.png"
+                          src="/brand/jra-mark-full.png"
                           alt=""
                           fill
                           sizes="80px"
