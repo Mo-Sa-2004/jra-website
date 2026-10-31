@@ -139,15 +139,15 @@ export async function AudienceGate({
                         for the sub-brand logo rans.ca uses there. */}
                     <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                       <div className="relative h-16 w-16 rounded-full bg-white p-3 shadow-md ring-1 ring-black/5 sm:h-20 sm:w-20">
-                        {/* Full wordmark, not just the icon mark -- `fill` +
-                            `object-contain` scales the whole logo down to
-                            fit inside the circle without cropping it. */}
+                        {/* Icon mark only, no wordmark text -- `fill` +
+                            `object-contain` scales it to fill the circle
+                            cleanly without stretching or cropping it. */}
                         <Image
-                          src="/brand/jra-logo.png"
+                          src="/brand/jra-mark.png"
                           alt=""
                           fill
                           sizes="80px"
-                          className="object-contain p-1"
+                          className="object-contain"
                         />
                       </div>
                     </div>
