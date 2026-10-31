@@ -126,7 +126,11 @@
     "gateSwitchToMember": "Here on behalf of a restaurant or hospitality business?",
     "forMembersTitle": "Built for restaurant and hospitality businesses",
     "forMembersSubtitle": "Classification, training, legal resources, membership benefits and everything JRA runs for operators across Jordan.",
-    "forMembersQuickAccessTitle": "Member services"
+    "forMembersQuickAccessTitle": "Member services",
+    "discoverWelcomeKicker": "Welcome to",
+    "discoverSocialTitle": "From Our Members",
+    "discoverSocialBody": "A look at what JRA's member restaurants are serving up -- browse the directory for more, or follow along on social.",
+    "discoverFollowUs": "Follow us"
   },
   "footer": {
     "tagline": "One network. One voice. Endless opportunities.",
@@ -944,7 +948,8 @@
     "description": "JRA meetings, workshops and industry events — upcoming and past.",
     "upcoming": "Upcoming",
     "past": "Past events",
-    "noUpcoming": "No upcoming events right now — check back soon."
+    "noUpcoming": "No upcoming events right now — check back soon.",
+    "info": "Info"
   },
   "gallery": {
     "title": "Media Gallery",
