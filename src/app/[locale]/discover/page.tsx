@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CalendarDays, MapPin, ArrowUpRight } from "lucide-react";
+import Image from "next/image";
+import { CalendarDays, MapPin, ArrowUpRight, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/cover-thumb";
 import { DiscoverHero } from "@/components/home/discover-hero";
+import { CuisineCarousel } from "@/components/home/cuisine-carousel";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { ORG } from "@/lib/organisation";
 import { db } from "@/lib/db";
@@ -14,22 +16,20 @@ export const revalidate = 300;
 export const generateMetadata = pageMetadata("/discover", "discover");
 
 /**
- * Rebuilt to match the client's reference landing page
- * (https://rans.ca/dinens/) in JRA's blue/white/gray: a full-bleed photo
- * hero with the search band layered on it, a short "Welcome to" blurb, a
- * row of three circular links into the site, an upcoming-events strip, a
- * member-photo section standing in for the reference's live Instagram
- * embed (JRA has no social API access wired up here, so this reuses real
- * member photos from the directory instead, alongside real links to JRA's
- * own accounts), and the newsletter signup. This replaces the previous
- * /discover (new-member carousel, cuisine browse, quick access grid,
- * combined news/events, map) rather than running alongside it, since none
- * of those appear on the reference page being matched.
- *
- * The reference's third card is "Foodie Bites", a lifestyle content feed
- * JRA's closest equivalent to is `/news` (JRA has no blog-style section;
- * `/magazine` is PDF issues, a worse fit) -- so Restaurants / Events /
- * News is what fills that row here.
+ * Rebuilt to match the designer's "Dine Jordan" reference package
+ * (restaurants.html / dine-shell.css in the November 2026 handover): the
+ * shared hero with its dual circular photos and pill search panel
+ * (`DiscoverHero`), three rectangular gateway cards into Restaurants /
+ * Events / News (using the reference's own fixed category photography,
+ * not a dynamically picked item's photo -- see the comment above the
+ * gateway-card section), and a horizontally-scrolling cuisine carousel
+ * using real JRA cuisines rather than the designer's own sample list.
+ * Below that,
+ * this keeps real sections the reference page itself doesn't need (it
+ * links out to separate restaurants.html/events/news views instead): an
+ * upcoming-events strip, a member-photo section standing in for a live
+ * Instagram embed JRA has no API access wired up here for, and the
+ * newsletter signup.
  */
 export default async function DiscoverPage({
   params,
@@ -42,15 +42,21 @@ export default async function DiscoverPage({
   const tCommon = await getTranslations("common");
   const tNav = await getTranslations("nav");
   const tEvents = await getTranslations("events");
-  const associationName = tCommon("associationName");
 
-  const [topRestaurants, upcomingEvents, latestNews, facets] = await Promise.all([
+  const [topRestaurants, upcomingEvents, facets] = await Promise.all([
     db.restaurant.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ sustainabilityScore: "desc" }, { createdAt: "desc" }],
       take: 9,
       include: {
-        images: { where: { isPrimary: true }, take: 1 },
+        // No `where: { isPrimary: true }` -- most listings have never had
+        // one flagged (see cover-thumb.tsx's own note on how rare cover
+        // images are). `lib/restaurants.ts`'s own `toCardData` -- used
+        // everywhere real photos *do* show up -- takes the flagged image
+        // or, failing that, the first by `sortOrder`; the member-photo
+        // gallery further down this page matches that instead of
+        // requiring the flag.
+        images: { orderBy: { sortOrder: "asc" } },
         governorate: true,
       },
     }),
@@ -58,11 +64,6 @@ export default async function DiscoverPage({
       where: { status: "PUBLISHED", startAt: { gte: new Date() } },
       orderBy: { startAt: "asc" },
       take: 3,
-      include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
-    }),
-    db.newsArticle.findFirst({
-      where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
       include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
     getDirectoryFacets(),
@@ -73,64 +74,63 @@ export default async function DiscoverPage({
 
   return (
     <div>
-      <DiscoverHero governorates={facets.governorates} />
+      <DiscoverHero governorates={facets.governorates} cuisines={facets.cuisines} />
 
-      {/* Welcome blurb -- the reference's own text here ("Dine NS has been
-          supporting restaurants and food lovers since 1947...") is close
-          enough in shape to JRA's existing hero subtitle that this reuses
-          it rather than writing new copy. */}
-      <section className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6 md:py-20">
-        <p className="ui-caps text-sm font-semibold text-accent">{t("discoverWelcomeKicker")}</p>
-        <h2 className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
-          {associationName}
-        </h2>
-        <p className="mx-auto mt-5 max-w-xl leading-relaxed text-ink-soft">{t("heroSubtitle")}</p>
-      </section>
-
-      {/* Three circular links into the site, matching the reference's own
-          Restaurants / Events / Foodie Bites row -- JRA's nearest
-          equivalent to the last one is News (see the file-level note). */}
-      <section className="border-y border-rule bg-surface-2">
-        <div className="mx-auto grid max-w-4xl grid-cols-3 gap-6 px-4 py-14 sm:gap-10 sm:px-6">
+      {/* Three rectangular gateway cards into Restaurants / Events / News,
+          matching the reference's own `.gateway-card` row. These link to
+          general directory sections rather than any one restaurant, event
+          or article, so -- like the reference design itself -- they use
+          fixed, generic category photography (the designer's own
+          restaurants/events/news stock photos) rather than a dynamically
+          picked item's photo. A per-item lookup was tried first, but most
+          restaurants' only uploaded image is a logo rather than a
+          food/interior photo, and events/news records here have no cover
+          photos at all, so that approach kept surfacing logos or empty
+          placeholders instead of the photo-forward cards the design calls
+          for. */}
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8">
+        <div className="dine-gateway">
           {[
             {
               key: "restaurants",
               href: "/restaurants",
               label: tNav("restaurants"),
-              image: featuredRestaurant?.images[0]?.url ?? null,
-              seed: featuredRestaurant?.slug ?? "restaurants",
+              image: "/brand/dine-gateway-restaurants.webp",
             },
             {
               key: "events",
               href: "/events",
               label: tEvents("title"),
-              image: upcomingEvents[0]?.coverImageUrl ?? null,
-              seed: upcomingEvents[0]?.slug ?? "events",
+              image: "/brand/dine-gateway-events.webp",
             },
             {
               key: "news",
               href: "/news",
               label: tNav("news"),
-              image: latestNews?.coverImageUrl ?? null,
-              seed: latestNews?.slug ?? "news",
+              image: "/brand/dine-gateway-news.webp",
             },
           ].map((card) => (
-            <Link key={card.key} href={card.href} className="group flex flex-col items-center text-center">
-              <div className="w-full overflow-hidden rounded-full ring-1 ring-rule transition-shadow group-hover:ring-accent">
-                <CoverThumb
-                  url={card.image}
-                  alt=""
-                  seed={card.seed}
-                  title={card.label}
-                  sizes="(min-width: 640px) 160px, 30vw"
-                  aspect="aspect-square"
-                />
-              </div>
-              <span className="mt-3 text-sm font-semibold text-ink group-hover:text-accent sm:text-base">
-                {card.label}
+            <Link key={card.key} href={card.href} className="dine-gateway-card">
+              <Image
+                src={card.image}
+                alt=""
+                fill
+                sizes="(min-width: 640px) 33vw, 100vw"
+                className="dine-gateway-photo"
+              />
+              <span className="dine-gateway-label">{card.label}</span>
+              <span className="dine-gateway-arrow" aria-hidden="true">
+                <ArrowRight className="h-5 w-5 rtl:-scale-x-100" />
               </span>
             </Link>
           ))}
+        </div>
+
+        {/* Explore by Cuisine -- real JRA cuisines, not the designer's own
+            sample list (see cuisine-carousel.tsx). */}
+        <div className="mt-12">
+          <h2 className="mb-4 font-display text-2xl font-bold text-ink">{t("exploreByCuisine")}</h2>
+          <CuisineCarousel cuisines={facets.cuisines} />
         </div>
       </section>
 
@@ -210,22 +210,36 @@ export default async function DiscoverPage({
             <p className="mx-auto mt-2 max-w-xl text-sm text-white/80">{t("discoverSocialBody")}</p>
 
             <div className="stagger mt-8 grid grid-cols-4 gap-2 sm:gap-3">
-              {galleryRestaurants.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`/restaurants/${r.slug}`}
-                  className="motion-card overflow-hidden rounded-lg"
-                >
-                  <CoverThumb
-                    url={r.images[0]?.url ?? null}
-                    alt=""
-                    seed={r.slug}
-                    title={r.name}
-                    sizes="(min-width: 640px) 12vw, 25vw"
-                    aspect="aspect-square"
-                  />
-                </Link>
-              ))}
+              {galleryRestaurants.map((r) => {
+                // Same primary/cover split as lib/restaurants.ts's own
+                // toCardData: most listings have only the one uploaded
+                // image, and it's usually a small logo rather than a photo.
+                // Stretching that logo full-bleed across this square (the
+                // old behaviour) is what was showing up blurry -- a second,
+                // genuinely separate photo is safe to crop full-bleed since
+                // it's an actual picture; a logo gets shown whole instead,
+                // same "contain" treatment restaurant-card.tsx already
+                // gives this exact case.
+                const primary = r.images.find((i) => i.isPrimary) ?? r.images[0];
+                const cover = r.images.find((i) => i !== primary);
+                return (
+                  <Link
+                    key={r.slug}
+                    href={`/restaurants/${r.slug}`}
+                    className="motion-card overflow-hidden rounded-lg"
+                  >
+                    <CoverThumb
+                      url={cover?.url ?? primary?.url ?? null}
+                      fit={cover ? "cover" : "contain"}
+                      alt=""
+                      seed={r.slug}
+                      title={r.name}
+                      sizes="(min-width: 640px) 12vw, 25vw"
+                      aspect="aspect-square"
+                    />
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

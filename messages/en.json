@@ -132,7 +132,13 @@
     "discoverWelcomeKicker": "Welcome to",
     "discoverSocialTitle": "From Our Members",
     "discoverSocialBody": "A look at what JRA's member restaurants are serving up -- browse the directory for more, or follow along on social.",
-    "discoverFollowUs": "Follow us"
+    "discoverFollowUs": "Follow us",
+    "dineJordanTitle": "Dine Jordan",
+    "dineSearchPlaceholder": "Search restaurants, events, news...",
+    "findRestaurantsCta": "Find Restaurants",
+    "exploreByCuisine": "Explore by Cuisine",
+    "cuisinePrevious": "Previous cuisines",
+    "cuisineNext": "Next cuisines"
   },
   "footer": {
     "tagline": "One network. One voice. Endless opportunities.",
