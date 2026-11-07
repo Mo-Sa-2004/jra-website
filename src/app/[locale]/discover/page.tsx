@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import Image from "next/image";
 import { CalendarDays, MapPin, ArrowUpRight, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/cover-thumb";
@@ -19,9 +20,11 @@ export const generateMetadata = pageMetadata("/discover", "discover");
  * (restaurants.html / dine-shell.css in the November 2026 handover): the
  * shared hero with its dual circular photos and pill search panel
  * (`DiscoverHero`), three rectangular gateway cards into Restaurants /
- * Events / News, and a horizontally-scrolling cuisine carousel — all using
- * real JRA data (the directory's actual restaurants/events/news and
- * cuisine list) rather than the designer's own sample content. Below that,
+ * Events / News (using the reference's own fixed category photography,
+ * not a dynamically picked item's photo -- see the comment above the
+ * gateway-card section), and a horizontally-scrolling cuisine carousel
+ * using real JRA cuisines rather than the designer's own sample list.
+ * Below that,
  * this keeps real sections the reference page itself doesn't need (it
  * links out to separate restaurants.html/events/news views instead): an
  * upcoming-events strip, a member-photo section standing in for a live
@@ -40,7 +43,7 @@ export default async function DiscoverPage({
   const tNav = await getTranslations("nav");
   const tEvents = await getTranslations("events");
 
-  const [topRestaurants, upcomingEventsPool, latestNewsPool, facets] = await Promise.all([
+  const [topRestaurants, upcomingEvents, facets] = await Promise.all([
     db.restaurant.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ sustainabilityScore: "desc" }, { createdAt: "desc" }],
@@ -48,11 +51,11 @@ export default async function DiscoverPage({
       include: {
         // No `where: { isPrimary: true }` -- most listings have never had
         // one flagged (see cover-thumb.tsx's own note on how rare cover
-        // images are), which made every card here fall straight to
-        // CoverThumb's empty state. `lib/restaurants.ts`'s own
-        // `toCardData` -- used everywhere real photos *do* show up --
-        // takes the flagged image or, failing that, the first by
-        // `sortOrder`; this matches that instead of requiring the flag.
+        // images are). `lib/restaurants.ts`'s own `toCardData` -- used
+        // everywhere real photos *do* show up -- takes the flagged image
+        // or, failing that, the first by `sortOrder`; the member-photo
+        // gallery further down this page matches that instead of
+        // requiring the flag.
         images: { orderBy: { sortOrder: "asc" } },
         governorate: true,
       },
@@ -60,48 +63,31 @@ export default async function DiscoverPage({
     db.event.findMany({
       where: { status: "PUBLISHED", startAt: { gte: new Date() } },
       orderBy: { startAt: "asc" },
-      take: 6,
-      include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
-    }),
-    db.newsArticle.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
-      take: 5,
+      take: 3,
       include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
     getDirectoryFacets(),
   ]);
 
-  // The Restaurants gateway card links to the general directory, not to any
-  // one restaurant, so nothing forces it to picture the single top-ranked
-  // listing -- it just needs a photo. Prefer the first of the top 9 that
-  // actually has one uploaded (primary flag, or first by sortOrder) over
-  // forcing in #1 by score even when #1 turns out to have none.
-  const restaurantWithImage = topRestaurants.find((r) => r.images.length > 0);
-  const featuredRestaurantImage = restaurantWithImage
-    ? (restaurantWithImage.images.find((i) => i.isPrimary)?.url ?? restaurantWithImage.images[0]?.url ?? null)
-    : null;
-  const featuredRestaurant = restaurantWithImage ?? topRestaurants[0];
-  const galleryRestaurants = topRestaurants.filter((r) => r.slug !== featuredRestaurant?.slug).slice(0, 8);
-
-  // The upcoming-events strip below still shows the true three soonest
-  // events, in order, regardless of photos. The gateway card is a
-  // photo-forward format though, so it prefers whichever of the next few
-  // events or articles actually has a cover photo over forcing in the
-  // single soonest/latest record when that one happens to have none.
-  const upcomingEvents = upcomingEventsPool.slice(0, 3);
-  const gatewayEvent = upcomingEventsPool.find((e) => e.coverImageUrl) ?? upcomingEventsPool[0];
-  const gatewayNews = latestNewsPool.find((n) => n.coverImageUrl) ?? latestNewsPool[0];
+  const featuredRestaurant = topRestaurants[0];
+  const galleryRestaurants = topRestaurants.slice(1, 9);
 
   return (
     <div>
       <DiscoverHero governorates={facets.governorates} cuisines={facets.cuisines} />
 
       {/* Three rectangular gateway cards into Restaurants / Events / News,
-          matching the reference's own `.gateway-card` row -- real cover
-          photos from the directory's actual top restaurant, next event and
-          latest article, with `CoverThumb`'s existing empty-state handling
-          for whichever of the three has none yet. */}
+          matching the reference's own `.gateway-card` row. These link to
+          general directory sections rather than any one restaurant, event
+          or article, so -- like the reference design itself -- they use
+          fixed, generic category photography (the designer's own
+          restaurants/events/news stock photos) rather than a dynamically
+          picked item's photo. A per-item lookup was tried first, but most
+          restaurants' only uploaded image is a logo rather than a
+          food/interior photo, and events/news records here have no cover
+          photos at all, so that approach kept surfacing logos or empty
+          placeholders instead of the photo-forward cards the design calls
+          for. */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8">
         <div className="dine-gateway">
           {[
@@ -109,32 +95,28 @@ export default async function DiscoverPage({
               key: "restaurants",
               href: "/restaurants",
               label: tNav("restaurants"),
-              image: featuredRestaurantImage,
-              seed: featuredRestaurant?.slug ?? "restaurants",
+              image: "/brand/dine-gateway-restaurants.webp",
             },
             {
               key: "events",
               href: "/events",
               label: tEvents("title"),
-              image: gatewayEvent?.coverImageUrl ?? null,
-              seed: gatewayEvent?.slug ?? "events",
+              image: "/brand/dine-gateway-events.webp",
             },
             {
               key: "news",
               href: "/news",
               label: tNav("news"),
-              image: gatewayNews?.coverImageUrl ?? null,
-              seed: gatewayNews?.slug ?? "news",
+              image: "/brand/dine-gateway-news.webp",
             },
           ].map((card) => (
             <Link key={card.key} href={card.href} className="dine-gateway-card">
-              <CoverThumb
-                url={card.image}
+              <Image
+                src={card.image}
                 alt=""
-                seed={card.seed}
-                title={card.label}
+                fill
                 sizes="(min-width: 640px) 33vw, 100vw"
-                aspect="h-full w-full"
+                className="dine-gateway-photo"
               />
               <span className="dine-gateway-label">{card.label}</span>
               <span className="dine-gateway-arrow" aria-hidden="true">
