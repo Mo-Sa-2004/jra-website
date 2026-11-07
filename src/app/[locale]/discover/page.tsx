@@ -210,22 +210,36 @@ export default async function DiscoverPage({
             <p className="mx-auto mt-2 max-w-xl text-sm text-white/80">{t("discoverSocialBody")}</p>
 
             <div className="stagger mt-8 grid grid-cols-4 gap-2 sm:gap-3">
-              {galleryRestaurants.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`/restaurants/${r.slug}`}
-                  className="motion-card overflow-hidden rounded-lg"
-                >
-                  <CoverThumb
-                    url={r.images.find((i) => i.isPrimary)?.url ?? r.images[0]?.url ?? null}
-                    alt=""
-                    seed={r.slug}
-                    title={r.name}
-                    sizes="(min-width: 640px) 12vw, 25vw"
-                    aspect="aspect-square"
-                  />
-                </Link>
-              ))}
+              {galleryRestaurants.map((r) => {
+                // Same primary/cover split as lib/restaurants.ts's own
+                // toCardData: most listings have only the one uploaded
+                // image, and it's usually a small logo rather than a photo.
+                // Stretching that logo full-bleed across this square (the
+                // old behaviour) is what was showing up blurry -- a second,
+                // genuinely separate photo is safe to crop full-bleed since
+                // it's an actual picture; a logo gets shown whole instead,
+                // same "contain" treatment restaurant-card.tsx already
+                // gives this exact case.
+                const primary = r.images.find((i) => i.isPrimary) ?? r.images[0];
+                const cover = r.images.find((i) => i !== primary);
+                return (
+                  <Link
+                    key={r.slug}
+                    href={`/restaurants/${r.slug}`}
+                    className="motion-card overflow-hidden rounded-lg"
+                  >
+                    <CoverThumb
+                      url={cover?.url ?? primary?.url ?? null}
+                      fit={cover ? "cover" : "contain"}
+                      alt=""
+                      seed={r.slug}
+                      title={r.name}
+                      sizes="(min-width: 640px) 12vw, 25vw"
+                      aspect="aspect-square"
+                    />
+                  </Link>
+                );
+              })}
             </div>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

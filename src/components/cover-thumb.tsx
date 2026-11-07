@@ -14,6 +14,15 @@ import Image from "next/image";
  * scannable instead of uniform.
  *
  * `sizes` is passed by the caller because only the caller knows the grid.
+ *
+ * `fit` defaults to "cover" (full-bleed, cropped to fill the frame) for a
+ * genuine photo. Pass "contain" when `url` might be a small logo rather
+ * than a photo -- a real food/interior photo looks fine stretched to fill
+ * a large frame, but a small logo blown up the same way turns visibly
+ * blurry (this is why restaurant-card.tsx already treats its own logo-only
+ * case the same way: object-contain with padding, not object-cover).
+ * "contain" adds breathing-room padding so the whole logo stays visible
+ * instead of being cropped at the edges.
  */
 const PLACEHOLDER_TINTS = [
   "from-accent-soft to-surface-2",
@@ -36,6 +45,7 @@ export function CoverThumb({
   sizes,
   aspect = "aspect-[16/9]",
   priority = false,
+  fit = "cover",
 }: {
   url: string | null | undefined;
   /** Empty string marks the image as decorative — use when the title is adjacent. */
@@ -47,9 +57,13 @@ export function CoverThumb({
   sizes: string;
   aspect?: string;
   priority?: boolean;
+  /** "cover" (default) for a real photo; "contain" for a small logo -- see doc comment above. */
+  fit?: "cover" | "contain";
 }) {
   return (
-    <div className={`zoom-frame relative ${aspect} overflow-hidden bg-surface-2`}>
+    <div
+      className={`zoom-frame relative ${aspect} overflow-hidden bg-surface-2 ${fit === "contain" ? "p-3" : ""}`}
+    >
       {url ? (
         <Image
           src={url}
@@ -57,7 +71,7 @@ export function CoverThumb({
           fill
           sizes={sizes}
           priority={priority}
-          className="motion-card-image object-cover"
+          className={`motion-card-image ${fit === "contain" ? "object-contain" : "object-cover"}`}
         />
       ) : (
         <div
