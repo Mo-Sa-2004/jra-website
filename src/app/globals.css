@@ -1177,7 +1177,6 @@ input[type="range"]:focus-visible {
 
 .dine-search-panel {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
   background: white;
   border: 2px solid #edf5ff;
@@ -1431,6 +1430,9 @@ input[type="range"]:focus-visible {
 @media (max-width: 640px) {
   .dine-hero-copy h1 {
     margin-bottom: 1rem;
+  }
+  .dine-search-panel {
+    flex-wrap: wrap;
   }
   .dine-search-fields {
     grid-template-columns: minmax(0, 1fr);

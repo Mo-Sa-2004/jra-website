@@ -40,25 +40,33 @@ export default async function DiscoverPage({
   const tNav = await getTranslations("nav");
   const tEvents = await getTranslations("events");
 
-  const [topRestaurants, upcomingEvents, latestNews, facets] = await Promise.all([
+  const [topRestaurants, upcomingEventsPool, latestNewsPool, facets] = await Promise.all([
     db.restaurant.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ sustainabilityScore: "desc" }, { createdAt: "desc" }],
       take: 9,
       include: {
-        images: { where: { isPrimary: true }, take: 1 },
+        // No `where: { isPrimary: true }` -- most listings have never had
+        // one flagged (see cover-thumb.tsx's own note on how rare cover
+        // images are), which made every card here fall straight to
+        // CoverThumb's empty state. `lib/restaurants.ts`'s own
+        // `toCardData` -- used everywhere real photos *do* show up --
+        // takes the flagged image or, failing that, the first by
+        // `sortOrder`; this matches that instead of requiring the flag.
+        images: { orderBy: { sortOrder: "asc" } },
         governorate: true,
       },
     }),
     db.event.findMany({
       where: { status: "PUBLISHED", startAt: { gte: new Date() } },
       orderBy: { startAt: "asc" },
-      take: 3,
+      take: 6,
       include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
-    db.newsArticle.findFirst({
+    db.newsArticle.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
+      take: 5,
       include: { translations: { where: { locale: locale === "ar" ? "ar" : "en" } } },
     }),
     getDirectoryFacets(),
@@ -66,6 +74,17 @@ export default async function DiscoverPage({
 
   const featuredRestaurant = topRestaurants[0];
   const galleryRestaurants = topRestaurants.slice(1, 9);
+  const featuredRestaurantImage =
+    featuredRestaurant?.images.find((i) => i.isPrimary)?.url ?? featuredRestaurant?.images[0]?.url ?? null;
+
+  // The upcoming-events strip below still shows the true three soonest
+  // events, in order, regardless of photos. The gateway card is a
+  // photo-forward format though, so it prefers whichever of the next few
+  // events or articles actually has a cover photo over forcing in the
+  // single soonest/latest record when that one happens to have none.
+  const upcomingEvents = upcomingEventsPool.slice(0, 3);
+  const gatewayEvent = upcomingEventsPool.find((e) => e.coverImageUrl) ?? upcomingEventsPool[0];
+  const gatewayNews = latestNewsPool.find((n) => n.coverImageUrl) ?? latestNewsPool[0];
 
   return (
     <div>
@@ -83,22 +102,22 @@ export default async function DiscoverPage({
               key: "restaurants",
               href: "/restaurants",
               label: tNav("restaurants"),
-              image: featuredRestaurant?.images[0]?.url ?? null,
+              image: featuredRestaurantImage,
               seed: featuredRestaurant?.slug ?? "restaurants",
             },
             {
               key: "events",
               href: "/events",
               label: tEvents("title"),
-              image: upcomingEvents[0]?.coverImageUrl ?? null,
-              seed: upcomingEvents[0]?.slug ?? "events",
+              image: gatewayEvent?.coverImageUrl ?? null,
+              seed: gatewayEvent?.slug ?? "events",
             },
             {
               key: "news",
               href: "/news",
               label: tNav("news"),
-              image: latestNews?.coverImageUrl ?? null,
-              seed: latestNews?.slug ?? "news",
+              image: gatewayNews?.coverImageUrl ?? null,
+              seed: gatewayNews?.slug ?? "news",
             },
           ].map((card) => (
             <Link key={card.key} href={card.href} className="dine-gateway-card">
@@ -209,7 +228,7 @@ export default async function DiscoverPage({
                   className="motion-card overflow-hidden rounded-lg"
                 >
                   <CoverThumb
-                    url={r.images[0]?.url ?? null}
+                    url={r.images.find((i) => i.isPrimary)?.url ?? r.images[0]?.url ?? null}
                     alt=""
                     seed={r.slug}
                     title={r.name}
