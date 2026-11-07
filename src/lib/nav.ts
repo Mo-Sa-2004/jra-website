@@ -157,9 +157,20 @@ export const businessNav: NavCategory[] = [
  *  lookup). Without this, clicking "Restaurant Directory" from the Foodie
  *  header would land on `/restaurants` only to have the page revert to the
  *  old, un-split eight-category header — the exact bug this fixes. */
+function stripHash(href: string): string {
+  const i = href.indexOf("#");
+  return i === -1 ? href : href.slice(0, i);
+}
+
 export function navRoutes(categories: NavCategory[]): string[] {
-  const hrefs = categories.flatMap((cat) => [cat.href, ...cat.children.map((c) => c.href)]);
-  return Array.from(new Set(hrefs.filter((h): h is string => Boolean(h)).map((h) => h.split("#")[0])));
+  const routes = new Set<string>();
+  for (const cat of categories) {
+    if (cat.href) routes.add(stripHash(cat.href));
+    for (const child of cat.children) {
+      routes.add(stripHash(child.href));
+    }
+  }
+  return Array.from(routes);
 }
 
 /** Flat, de-duplicated-by-href list for the footer/sitemap page, which has
