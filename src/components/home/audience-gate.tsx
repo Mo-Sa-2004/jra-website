@@ -35,7 +35,15 @@ const TILES: GateTile[] = [
   },
   {
     key: "seekers",
-    href: "/jobs",
+    // Straight to SiyahaJobs itself -- no on-site landing page in between.
+    // This used to point at the internal `/jobs` route, which existed only
+    // to show a one-line explanation and a "Visit SiyahaJobs" button; that
+    // extra click/page was itself the problem (SiyahaJobs is where job
+    // listings actually live, so the gate should hand off there directly,
+    // same as it already does for the CRM elsewhere on this site). `/jobs`
+    // still exists for anyone who lands on it directly (e.g. search), but
+    // nothing on the site links to it anymore.
+    href: ORG.external.siyahaJobs,
     titleKey: "gateSeekersTitle",
     variant: "seeker",
   },
@@ -72,6 +80,12 @@ const TILES: GateTile[] = [
  * Seekers uses SiyahaJobs' own mark, copied the same way from
  * assets/siyahajobs-symbol.png into public/brand/siyahajobs-mark.png — it's
  * SiyahaJobs' existing public logo, not artwork invented for this page.
+ *
+ * Foodie and Business stay on-site (`Link`); Seekers hands off to
+ * SiyahaJobs' own domain, so it renders as a plain anchor with
+ * `target="_blank"` -- the same outbound-link treatment the rest of the
+ * site gives SiyahaJobs (see partner-strip.tsx) -- rather than routing
+ * through the old `/jobs` in-between page.
  */
 export async function AudienceGate() {
   const t = await getTranslations("home");
@@ -138,26 +152,10 @@ export async function AudienceGate() {
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-10 sm:px-6">
         <div className="gate-portals flex w-full max-w-[1400px] flex-col items-center gap-7 sm:flex-row sm:gap-0">
-          {TILES.map((tile) => (
-            <div key={tile.key} className={`gate-orbit gate-orbit-${tile.key}`}>
-              <span aria-hidden="true" className="gate-orbit-ring">
-                <svg viewBox="0 0 100 100" focusable="false">
-                  <defs>
-                    <linearGradient id={`gate-ring-${tile.key}`} x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stopColor="#0053a0" stopOpacity=".12" />
-                      <stop offset=".5" stopColor="#0053a0" />
-                      <stop offset="1" stopColor="#6fb4ec" stopOpacity=".5" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    className="gate-orbit-arc"
-                    d="M50 0A50 50 0 0 1 93.301 75M25 93.301A50 50 0 0 1 0 50"
-                    stroke={`url(#gate-ring-${tile.key})`}
-                  />
-                </svg>
-              </span>
-
-              <Link href={tile.href} className={`gate-portal gate-portal-${tile.variant}`}>
+          {TILES.map((tile) => {
+            const external = tile.href.startsWith("http");
+            const portalBody = (
+              <>
                 {tile.variant === "seeker" ? (
                   <span className="gate-portal-seeker-mark">
                     <Image
@@ -185,9 +183,45 @@ export async function AudienceGate() {
                     <ArrowRight className="h-5 w-5 rtl:-scale-x-100" strokeWidth={1.8} />
                   </span>
                 </span>
-              </Link>
-            </div>
-          ))}
+              </>
+            );
+
+            return (
+              <div key={tile.key} className={`gate-orbit gate-orbit-${tile.key}`}>
+                <span aria-hidden="true" className="gate-orbit-ring">
+                  <svg viewBox="0 0 100 100" focusable="false">
+                    <defs>
+                      <linearGradient id={`gate-ring-${tile.key}`} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stopColor="#0053a0" stopOpacity=".12" />
+                        <stop offset=".5" stopColor="#0053a0" />
+                        <stop offset="1" stopColor="#6fb4ec" stopOpacity=".5" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      className="gate-orbit-arc"
+                      d="M50 0A50 50 0 0 1 93.301 75M25 93.301A50 50 0 0 1 0 50"
+                      stroke={`url(#gate-ring-${tile.key})`}
+                    />
+                  </svg>
+                </span>
+
+                {external ? (
+                  <a
+                    href={tile.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`gate-portal gate-portal-${tile.variant}`}
+                  >
+                    {portalBody}
+                  </a>
+                ) : (
+                  <Link href={tile.href} className={`gate-portal gate-portal-${tile.variant}`}>
+                    {portalBody}
+                  </Link>
+                )}
+              </div>
+            );
+          })}
         </div>
       </main>
 
