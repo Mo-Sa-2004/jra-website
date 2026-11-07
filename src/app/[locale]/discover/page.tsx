@@ -72,10 +72,17 @@ export default async function DiscoverPage({
     getDirectoryFacets(),
   ]);
 
-  const featuredRestaurant = topRestaurants[0];
-  const galleryRestaurants = topRestaurants.slice(1, 9);
-  const featuredRestaurantImage =
-    featuredRestaurant?.images.find((i) => i.isPrimary)?.url ?? featuredRestaurant?.images[0]?.url ?? null;
+  // The Restaurants gateway card links to the general directory, not to any
+  // one restaurant, so nothing forces it to picture the single top-ranked
+  // listing -- it just needs a photo. Prefer the first of the top 9 that
+  // actually has one uploaded (primary flag, or first by sortOrder) over
+  // forcing in #1 by score even when #1 turns out to have none.
+  const restaurantWithImage = topRestaurants.find((r) => r.images.length > 0);
+  const featuredRestaurantImage = restaurantWithImage
+    ? (restaurantWithImage.images.find((i) => i.isPrimary)?.url ?? restaurantWithImage.images[0]?.url ?? null)
+    : null;
+  const featuredRestaurant = restaurantWithImage ?? topRestaurants[0];
+  const galleryRestaurants = topRestaurants.filter((r) => r.slug !== featuredRestaurant?.slug).slice(0, 8);
 
   // The upcoming-events strip below still shows the true three soonest
   // events, in order, regardless of photos. The gateway card is a
