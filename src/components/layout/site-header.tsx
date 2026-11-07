@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Menu, X, ChevronDown, Phone, ExternalLink, ArrowLeft } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
-import { primaryNav, foodieNav, businessNav, type NavCategory } from "@/lib/nav";
+import { primaryNav, foodieNav, businessNav, navRoutes, type NavCategory } from "@/lib/nav";
 import { ORG } from "@/lib/organisation";
 import { LocaleSwitcher } from "./locale-switcher";
 import { HeaderSearch } from "./header-search";
@@ -90,29 +90,27 @@ function MobileNav({
 }
 
 /**
- * Slim header for the three audience-gate destinations (`/discover`,
- * `/for-members`, `/jobs`) — not the site's full eight-category mega-nav.
- * Those pages are each one specific audience's front door, reached by
- * picking a tile on the gate (`/`, which shows no header at all — see the
- * branch below); showing the whole site's navigation there, built for
- * every audience at once, undercuts the point of splitting the homepage by
- * audience in the first place.
+ * Slim header for the three audience gates and everything each one leads
+ * to — not just `/discover`/`/for-members`/`/jobs` themselves, but every
+ * page their own nav links to (see `discoverRoutes`/`businessRoutes` and
+ * `matchesRoute` below). Each gate is one audience's front door; the rest of
+ * that audience's pages are its rooms, and a visitor who walks from one to
+ * the other should never land back on the whole site's unsplit navigation —
+ * that defeats the point of splitting the homepage by audience at all.
  *
- * Per the client's November 2026 content split (previously the full
- * eight-category nav was duplicated wholesale on this page — see git
- * history), each side gets only the categories that belong to it:
- * `foodieNav` (Restaurants/Events/News) for `/discover`, `businessNav`
- * (About JRA/Membership/Classification/Directory & Industry minus
- * Restaurants/Training/Knowledge Center) for `/for-members` — both defined
- * once in lib/nav.ts, reusing the exact same dropdown mechanics as the full
- * site header (`PrimaryNav`/`MobileNav`, just scoped to a shorter list).
- * `/jobs` has no sub-content of its own (SiyahaJobs is an external hand-off
- * — see jobs/page.tsx), so it gets no nav at all, just the brand and a way
- * back.
+ * Per the client's November 2026 content split, each side gets only the
+ * categories that belong to it: `foodieNav` (Restaurants/Events/News/
+ * Newsletter/Gallery) for Foodie, `businessNav` (About JRA/Membership/
+ * Classification/Directory & Industry minus Restaurants/Training/Knowledge
+ * Center) for Business — both defined once in lib/nav.ts, reusing the exact
+ * same dropdown mechanics as the full site header (`PrimaryNav`/`MobileNav`,
+ * just scoped to a shorter list). `/jobs` has no sub-content of its own
+ * (SiyahaJobs is an external hand-off — see jobs/page.tsx), so it gets no
+ * nav at all, just the brand and a way back.
  *
- * That "way back" is now an explicit, always-visible button rather than
- * relying on the logo being clickable — the logo still links to "/" too,
- * but a labeled control is what the client asked for.
+ * That "way back" is an explicit, always-visible button rather than relying
+ * on the logo being clickable — the logo still links to "/" too, but a
+ * labeled control is what the client asked for.
  */
 function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" | "jobs" }) {
   const t = useTranslations();
@@ -183,6 +181,17 @@ function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" |
   );
 }
 
+// Every page `foodieNav`/`businessNav` themselves link to (restaurant
+// detail pages, article pages, etc. all nest under one of these prefixes).
+// Computed once at module load, not per render — the category lists are
+// static.
+const discoverRoutes = navRoutes(foodieNav);
+const businessRoutes = navRoutes(businessNav);
+
+function matchesRoute(pathname: string, routes: string[]) {
+  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
+
 export function SiteHeader() {
   const t = useTranslations();
   const pathname = usePathname();
@@ -215,18 +224,25 @@ export function SiteHeader() {
   }, []);
 
   // The gate shows no header at all — it's nothing but the three tiles, per
-  // the client's request. Its three destinations get the slim
-  // audience-scoped header above instead of the full site nav. Every other
-  // page keeps the full header exactly as before.
+  // the client's request.
   if (pathname === "/") return null;
-  if (pathname === "/discover" || pathname.startsWith("/discover/")) {
-    return <GateSectionHeader audience="discover" />;
-  }
-  if (pathname === "/for-members" || pathname.startsWith("/for-members/")) {
-    return <GateSectionHeader audience="forMembers" />;
-  }
+
+  // Each gate's slim, audience-scoped header follows the visitor past the
+  // gate itself and onto every page that gate's own nav links to — e.g.
+  // clicking "Restaurant Directory" on the Foodie gate lands on
+  // `/restaurants`, which must keep showing the Foodie header, not revert to
+  // the full eight-category one. Without this, every click out of a gate
+  // landed back on "the main [un-split] header," which is exactly the bug
+  // this covers. Only pages no gate's nav links to (admin, portal, login,
+  // legal/utility pages) still fall through to the full header below.
   if (pathname === "/jobs" || pathname.startsWith("/jobs/")) {
     return <GateSectionHeader audience="jobs" />;
+  }
+  if (pathname === "/discover" || matchesRoute(pathname, discoverRoutes)) {
+    return <GateSectionHeader audience="discover" />;
+  }
+  if (pathname === "/for-members" || matchesRoute(pathname, businessRoutes)) {
+    return <GateSectionHeader audience="forMembers" />;
   }
 
   return (

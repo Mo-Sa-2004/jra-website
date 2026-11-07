@@ -132,6 +132,8 @@ export const foodieNav: NavCategory[] = [
   { labelKey: "nav2.directory.restaurants", href: "/restaurants", children: [] },
   { labelKey: "nav2.newsEvents.events", href: "/events", children: [] },
   { labelKey: "nav2.newsEvents.news", href: "/news", children: [] },
+  { labelKey: "nav2.newsEvents.newsletter", href: "/magazine", children: [] },
+  { labelKey: "nav2.newsEvents.gallery", href: "/gallery", children: [] },
 ];
 
 export const businessNav: NavCategory[] = [
@@ -147,6 +149,18 @@ export const businessNav: NavCategory[] = [
   findCategory("nav2.training.label"),
   findCategory("nav2.knowledge.label"),
 ];
+
+/** Every path a category list's own links can lead to (its own href plus
+ *  every child's, `#`-fragments stripped) — used to decide which gate
+ *  header a destination page should keep showing once the visitor has
+ *  navigated away from the gate itself (see site-header.tsx's audience
+ *  lookup). Without this, clicking "Restaurant Directory" from the Foodie
+ *  header would land on `/restaurants` only to have the page revert to the
+ *  old, un-split eight-category header — the exact bug this fixes. */
+export function navRoutes(categories: NavCategory[]): string[] {
+  const hrefs = categories.flatMap((cat) => [cat.href, ...cat.children.map((c) => c.href)]);
+  return Array.from(new Set(hrefs.filter((h): h is string => Boolean(h)).map((h) => h.split("#")[0])));
+}
 
 /** Flat, de-duplicated-by-href list for the footer/sitemap page, which has
  *  no use for the dropdown grouping and would otherwise repeat a landing
