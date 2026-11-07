@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Menu, X, ChevronDown, Phone, ExternalLink } from "lucide-react";
+import { Menu, X, ChevronDown, Phone, ExternalLink, ArrowLeft } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
-import { primaryNav } from "@/lib/nav";
+import { primaryNav, foodieNav, businessNav, type NavCategory } from "@/lib/nav";
 import { ORG } from "@/lib/organisation";
 import { LocaleSwitcher } from "./locale-switcher";
 import { HeaderSearch } from "./header-search";
@@ -18,13 +18,19 @@ import { AccountMenu } from "./account-menu";
  * on desktop and tap on mobile, and an accordion is the tap equivalent of a
  * dropdown rather than a second, incompatible interaction.
  */
-function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+function MobileNav({
+  categories = primaryNav,
+  onNavigate,
+}: {
+  categories?: NavCategory[];
+  onNavigate: () => void;
+}) {
   const t = useTranslations();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <nav className="flex flex-col pt-2">
-      {primaryNav.map((cat) => {
+      {categories.map((cat) => {
         if (cat.children.length === 0) {
           return (
             <Link
@@ -84,59 +90,62 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 }
 
 /**
- * Slim header for the two audience-gate destinations (`/discover`,
- * `/for-members`) — not the site's full eight-category mega-nav. Those
- * pages are each one specific audience's front door, reached by picking a
- * tile on the gate (`/`, which shows no header at all — see the branch
- * below); showing the whole site's navigation there, built for every
- * audience at once, undercuts the point of splitting the homepage by
- * audience in the first place. The three links on each side are the same
- * ones that tile links to on the gate itself (see `audience-gate.tsx`), so
- * the gate and this header agree on what "related to it" means per side.
- * The logo keeps linking to "/", same as everywhere else — that's the way
- * back to the gate, no separate button needed for it.
+ * Slim header for the three audience-gate destinations (`/discover`,
+ * `/for-members`, `/jobs`) — not the site's full eight-category mega-nav.
+ * Those pages are each one specific audience's front door, reached by
+ * picking a tile on the gate (`/`, which shows no header at all — see the
+ * branch below); showing the whole site's navigation there, built for
+ * every audience at once, undercuts the point of splitting the homepage by
+ * audience in the first place.
+ *
+ * Per the client's November 2026 content split (previously the full
+ * eight-category nav was duplicated wholesale on this page — see git
+ * history), each side gets only the categories that belong to it:
+ * `foodieNav` (Restaurants/Events/News) for `/discover`, `businessNav`
+ * (About JRA/Membership/Classification/Directory & Industry minus
+ * Restaurants/Training/Knowledge Center) for `/for-members` — both defined
+ * once in lib/nav.ts, reusing the exact same dropdown mechanics as the full
+ * site header (`PrimaryNav`/`MobileNav`, just scoped to a shorter list).
+ * `/jobs` has no sub-content of its own (SiyahaJobs is an external hand-off
+ * — see jobs/page.tsx), so it gets no nav at all, just the brand and a way
+ * back.
+ *
+ * That "way back" is now an explicit, always-visible button rather than
+ * relying on the logo being clickable — the logo still links to "/" too,
+ * but a labeled control is what the client asked for.
  */
-function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" }) {
+function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" | "jobs" }) {
   const t = useTranslations();
+  const [open, setOpen] = useState(false);
 
-  const links =
-    audience === "discover"
-      ? [
-          { label: t("nav.restaurants"), href: "/restaurants" },
-          { label: t("nav.news"), href: "/news" },
-          { label: t("home.siyahaJobs"), href: "/jobs" },
-        ]
-      : [
-          { label: t("nav.membership"), href: "/membership" },
-          { label: t("nav.suppliers"), href: "/suppliers" },
-          { label: t("nav.training"), href: "/training" },
-        ];
+  const categories: NavCategory[] =
+    audience === "discover" ? foodieNav : audience === "forMembers" ? businessNav : [];
 
   return (
     <header className="sticky top-0 z-40 border-b border-rule bg-paper/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:px-6 md:px-8">
-        <Link href="/" className="flex shrink-0 items-center">
-          <Image
-            src={ORG.brand.logo}
-            alt={t("common.associationName")}
-            width={162}
-            height={31}
-            priority
-            className="h-7 w-auto sm:h-8"
-          />
-        </Link>
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <Link
+            href="/"
+            aria-label={t("common.backHome")}
+            className="ui-caps inline-flex items-center gap-1.5 rounded-full border border-rule px-2.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-ink-faint hover:text-ink sm:px-3"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 rtl:-scale-x-100" aria-hidden="true" />
+            <span className="hidden sm:inline">{t("common.backHome")}</span>
+          </Link>
+          <Link href="/" className="flex shrink-0 items-center">
+            <Image
+              src={ORG.brand.logo}
+              alt={t("common.associationName")}
+              width={162}
+              height={31}
+              priority
+              className="h-7 w-auto sm:h-8"
+            />
+          </Link>
+        </div>
 
-        <nav aria-label={t("common.primaryNav")} className="flex items-center gap-0.5 sm:gap-1">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="ui-caps rounded-md px-2 py-2 text-xs font-medium text-ink-soft transition-colors hover:text-ink sm:px-3.5 sm:text-sm"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {categories.length > 0 ? <PrimaryNav categories={categories} /> : null}
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {audience === "forMembers" ? (
@@ -151,8 +160,25 @@ function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" }
             </a>
           ) : null}
           <LocaleSwitcher />
+          {categories.length > 0 ? (
+            <button
+              type="button"
+              className="inline-flex size-[40px] cursor-pointer items-center justify-center rounded-md text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent xl:hidden"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={t("common.toggleMenu")}
+              aria-expanded={open}
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          ) : null}
         </div>
       </div>
+
+      {open && categories.length > 0 ? (
+        <div className="border-t border-rule bg-paper px-4 pb-4 xl:hidden">
+          <MobileNav categories={categories} onNavigate={() => setOpen(false)} />
+        </div>
+      ) : null}
     </header>
   );
 }
@@ -188,16 +214,19 @@ export function SiteHeader() {
     };
   }, []);
 
-  // The gate shows no header at all — it's nothing but the two tiles, per
-  // the client's request. Its two destinations get the slim audience-scoped
-  // header above instead of the full site nav. Every other page keeps the
-  // full header exactly as before.
+  // The gate shows no header at all — it's nothing but the three tiles, per
+  // the client's request. Its three destinations get the slim
+  // audience-scoped header above instead of the full site nav. Every other
+  // page keeps the full header exactly as before.
   if (pathname === "/") return null;
   if (pathname === "/discover" || pathname.startsWith("/discover/")) {
     return <GateSectionHeader audience="discover" />;
   }
   if (pathname === "/for-members" || pathname.startsWith("/for-members/")) {
     return <GateSectionHeader audience="forMembers" />;
+  }
+  if (pathname === "/jobs" || pathname.startsWith("/jobs/")) {
+    return <GateSectionHeader audience="jobs" />;
   }
 
   return (

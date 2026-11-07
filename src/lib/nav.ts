@@ -114,6 +114,40 @@ export const primaryNav: NavCategory[] = [
   },
 ];
 
+function findCategory(labelKey: string): NavCategory {
+  const cat = primaryNav.find((c) => c.labelKey === labelKey);
+  if (!cat) throw new Error(`nav category not found: ${labelKey}`);
+  return cat;
+}
+
+/**
+ * The three audience-gate headers (`/discover`, `/for-members`, `/jobs`)
+ * each show only the slice of the site's eight categories that belongs to
+ * that audience — per the client's November 2026 request, the full nav
+ * should not repeat identically across all three gates. Seekers has no
+ * on-site content of its own (SiyahaJobs is an external hand-off), so it
+ * gets no nav list here at all.
+ */
+export const foodieNav: NavCategory[] = [
+  { labelKey: "nav2.directory.restaurants", href: "/restaurants", children: [] },
+  { labelKey: "nav2.newsEvents.events", href: "/events", children: [] },
+  { labelKey: "nav2.newsEvents.news", href: "/news", children: [] },
+];
+
+export const businessNav: NavCategory[] = [
+  findCategory("nav2.about.label"),
+  findCategory("nav2.membership.label"),
+  findCategory("nav2.classification.label"),
+  {
+    labelKey: "nav2.directory.label",
+    children: findCategory("nav2.directory.label").children.filter(
+      (c) => c.labelKey !== "nav2.directory.restaurants",
+    ),
+  },
+  findCategory("nav2.training.label"),
+  findCategory("nav2.knowledge.label"),
+];
+
 /** Flat, de-duplicated-by-href list for the footer/sitemap page, which has
  *  no use for the dropdown grouping and would otherwise repeat a landing
  *  page once per child that shares it (e.g. /membership seven times over). */
