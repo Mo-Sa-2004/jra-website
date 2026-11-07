@@ -17,8 +17,13 @@ import { primaryNav, type NavCategory } from "@/lib/nav";
  * device, e.g. a touchscreen laptop, still works); closes on Escape, on
  * outside click, and when focus leaves the item. Only one dropdown is open
  * at a time.
+ *
+ * Accepts an optional `categories` list so the same dropdown mechanics can
+ * be reused for a shorter, audience-scoped set of categories (see the
+ * `/discover` and `/for-members` gate headers in site-header.tsx) instead
+ * of always rendering the full eight-category site nav.
  */
-export function PrimaryNav() {
+export function PrimaryNav({ categories = primaryNav }: { categories?: NavCategory[] } = {}) {
   const t = useTranslations();
   const pathname = usePathname();
   const [open, setOpen] = useState<number | null>(null);
@@ -67,7 +72,7 @@ export function PrimaryNav() {
   return (
     <nav aria-label={t("common.primaryNav")} className="hidden xl:block">
       <ul ref={navRef} className="flex items-center gap-1">
-        {primaryNav.map((cat, i) => {
+        {categories.map((cat, i) => {
           const active = isActive(cat);
           const hasChildren = cat.children.length > 0;
           const expanded = open === i;

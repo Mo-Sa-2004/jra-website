@@ -114,6 +114,65 @@ export const primaryNav: NavCategory[] = [
   },
 ];
 
+function findCategory(labelKey: string): NavCategory {
+  const cat = primaryNav.find((c) => c.labelKey === labelKey);
+  if (!cat) throw new Error(`nav category not found: ${labelKey}`);
+  return cat;
+}
+
+/**
+ * The three audience-gate headers (`/discover`, `/for-members`, `/jobs`)
+ * each show only the slice of the site's eight categories that belongs to
+ * that audience — per the client's November 2026 request, the full nav
+ * should not repeat identically across all three gates. Seekers has no
+ * on-site content of its own (SiyahaJobs is an external hand-off), so it
+ * gets no nav list here at all.
+ */
+export const foodieNav: NavCategory[] = [
+  { labelKey: "nav2.directory.restaurants", href: "/restaurants", children: [] },
+  { labelKey: "nav2.newsEvents.events", href: "/events", children: [] },
+  { labelKey: "nav2.newsEvents.news", href: "/news", children: [] },
+  { labelKey: "nav2.newsEvents.newsletter", href: "/magazine", children: [] },
+  { labelKey: "nav2.newsEvents.gallery", href: "/gallery", children: [] },
+];
+
+export const businessNav: NavCategory[] = [
+  findCategory("nav2.about.label"),
+  findCategory("nav2.membership.label"),
+  findCategory("nav2.classification.label"),
+  {
+    labelKey: "nav2.directory.label",
+    children: findCategory("nav2.directory.label").children.filter(
+      (c) => c.labelKey !== "nav2.directory.restaurants",
+    ),
+  },
+  findCategory("nav2.training.label"),
+  findCategory("nav2.knowledge.label"),
+];
+
+/** Every path a category list's own links can lead to (its own href plus
+ *  every child's, `#`-fragments stripped) — used to decide which gate
+ *  header a destination page should keep showing once the visitor has
+ *  navigated away from the gate itself (see site-header.tsx's audience
+ *  lookup). Without this, clicking "Restaurant Directory" from the Foodie
+ *  header would land on `/restaurants` only to have the page revert to the
+ *  old, un-split eight-category header — the exact bug this fixes. */
+function stripHash(href: string): string {
+  const i = href.indexOf("#");
+  return i === -1 ? href : href.slice(0, i);
+}
+
+export function navRoutes(categories: NavCategory[]): string[] {
+  const routes = new Set<string>();
+  for (const cat of categories) {
+    if (cat.href) routes.add(stripHash(cat.href));
+    for (const child of cat.children) {
+      routes.add(stripHash(child.href));
+    }
+  }
+  return Array.from(routes);
+}
+
 /** Flat, de-duplicated-by-href list for the footer/sitemap page, which has
  *  no use for the dropdown grouping and would otherwise repeat a landing
  *  page once per child that shares it (e.g. /membership seven times over). */
