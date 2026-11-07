@@ -132,7 +132,13 @@
     "discoverWelcomeKicker": "أهلاً بكم في",
     "discoverSocialTitle": "من مطاعم أعضائنا",
     "discoverSocialBody": "لمحة عما يقدّمه أعضاء النقابة من مطاعم — تصفّح الدليل لمزيد، أو تابعونا عبر مواقع التواصل الاجتماعي.",
-    "discoverFollowUs": "تابعونا"
+    "discoverFollowUs": "تابعونا",
+    "dineJordanTitle": "داين جوردن",
+    "dineSearchPlaceholder": "ابحث عن مطاعم، فعاليات، أخبار...",
+    "findRestaurantsCta": "ابحث عن مطاعم",
+    "exploreByCuisine": "استكشف حسب المطبخ",
+    "cuisinePrevious": "المطابخ السابقة",
+    "cuisineNext": "المطابخ التالية"
   },
   "footer": {
     "tagline": "شبكة واحدة، صوت واحد، فرص لا محدودة.",

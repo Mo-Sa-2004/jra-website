@@ -1,8 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CalendarDays, MapPin, ArrowUpRight } from "lucide-react";
+import { CalendarDays, MapPin, ArrowUpRight, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { CoverThumb } from "@/components/cover-thumb";
 import { DiscoverHero } from "@/components/home/discover-hero";
+import { CuisineCarousel } from "@/components/home/cuisine-carousel";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { ORG } from "@/lib/organisation";
 import { db } from "@/lib/db";
@@ -14,22 +15,18 @@ export const revalidate = 300;
 export const generateMetadata = pageMetadata("/discover", "discover");
 
 /**
- * Rebuilt to match the client's reference landing page
- * (https://rans.ca/dinens/) in JRA's blue/white/gray: a full-bleed photo
- * hero with the search band layered on it, a short "Welcome to" blurb, a
- * row of three circular links into the site, an upcoming-events strip, a
- * member-photo section standing in for the reference's live Instagram
- * embed (JRA has no social API access wired up here, so this reuses real
- * member photos from the directory instead, alongside real links to JRA's
- * own accounts), and the newsletter signup. This replaces the previous
- * /discover (new-member carousel, cuisine browse, quick access grid,
- * combined news/events, map) rather than running alongside it, since none
- * of those appear on the reference page being matched.
- *
- * The reference's third card is "Foodie Bites", a lifestyle content feed
- * JRA's closest equivalent to is `/news` (JRA has no blog-style section;
- * `/magazine` is PDF issues, a worse fit) -- so Restaurants / Events /
- * News is what fills that row here.
+ * Rebuilt to match the designer's "Dine Jordan" reference package
+ * (restaurants.html / dine-shell.css in the November 2026 handover): the
+ * shared hero with its dual circular photos and pill search panel
+ * (`DiscoverHero`), three rectangular gateway cards into Restaurants /
+ * Events / News, and a horizontally-scrolling cuisine carousel — all using
+ * real JRA data (the directory's actual restaurants/events/news and
+ * cuisine list) rather than the designer's own sample content. Below that,
+ * this keeps real sections the reference page itself doesn't need (it
+ * links out to separate restaurants.html/events/news views instead): an
+ * upcoming-events strip, a member-photo section standing in for a live
+ * Instagram embed JRA has no API access wired up here for, and the
+ * newsletter signup.
  */
 export default async function DiscoverPage({
   params,
@@ -42,7 +39,6 @@ export default async function DiscoverPage({
   const tCommon = await getTranslations("common");
   const tNav = await getTranslations("nav");
   const tEvents = await getTranslations("events");
-  const associationName = tCommon("associationName");
 
   const [topRestaurants, upcomingEvents, latestNews, facets] = await Promise.all([
     db.restaurant.findMany({
@@ -73,25 +69,15 @@ export default async function DiscoverPage({
 
   return (
     <div>
-      <DiscoverHero governorates={facets.governorates} />
+      <DiscoverHero governorates={facets.governorates} cuisines={facets.cuisines} />
 
-      {/* Welcome blurb -- the reference's own text here ("Dine NS has been
-          supporting restaurants and food lovers since 1947...") is close
-          enough in shape to JRA's existing hero subtitle that this reuses
-          it rather than writing new copy. */}
-      <section className="mx-auto max-w-3xl px-4 py-14 text-center sm:px-6 md:py-20">
-        <p className="ui-caps text-sm font-semibold text-accent">{t("discoverWelcomeKicker")}</p>
-        <h2 className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
-          {associationName}
-        </h2>
-        <p className="mx-auto mt-5 max-w-xl leading-relaxed text-ink-soft">{t("heroSubtitle")}</p>
-      </section>
-
-      {/* Three circular links into the site, matching the reference's own
-          Restaurants / Events / Foodie Bites row -- JRA's nearest
-          equivalent to the last one is News (see the file-level note). */}
-      <section className="border-y border-rule bg-surface-2">
-        <div className="mx-auto grid max-w-4xl grid-cols-3 gap-6 px-4 py-14 sm:gap-10 sm:px-6">
+      {/* Three rectangular gateway cards into Restaurants / Events / News,
+          matching the reference's own `.gateway-card` row -- real cover
+          photos from the directory's actual top restaurant, next event and
+          latest article, with `CoverThumb`'s existing empty-state handling
+          for whichever of the three has none yet. */}
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-8">
+        <div className="dine-gateway">
           {[
             {
               key: "restaurants",
@@ -115,22 +101,28 @@ export default async function DiscoverPage({
               seed: latestNews?.slug ?? "news",
             },
           ].map((card) => (
-            <Link key={card.key} href={card.href} className="group flex flex-col items-center text-center">
-              <div className="w-full overflow-hidden rounded-full ring-1 ring-rule transition-shadow group-hover:ring-accent">
-                <CoverThumb
-                  url={card.image}
-                  alt=""
-                  seed={card.seed}
-                  title={card.label}
-                  sizes="(min-width: 640px) 160px, 30vw"
-                  aspect="aspect-square"
-                />
-              </div>
-              <span className="mt-3 text-sm font-semibold text-ink group-hover:text-accent sm:text-base">
-                {card.label}
+            <Link key={card.key} href={card.href} className="dine-gateway-card">
+              <CoverThumb
+                url={card.image}
+                alt=""
+                seed={card.seed}
+                title={card.label}
+                sizes="(min-width: 640px) 33vw, 100vw"
+                aspect="h-full w-full"
+              />
+              <span className="dine-gateway-label">{card.label}</span>
+              <span className="dine-gateway-arrow" aria-hidden="true">
+                <ArrowRight className="h-5 w-5 rtl:-scale-x-100" />
               </span>
             </Link>
           ))}
+        </div>
+
+        {/* Explore by Cuisine -- real JRA cuisines, not the designer's own
+            sample list (see cuisine-carousel.tsx). */}
+        <div className="mt-12">
+          <h2 className="mb-4 font-display text-2xl font-bold text-ink">{t("exploreByCuisine")}</h2>
+          <CuisineCarousel cuisines={facets.cuisines} />
         </div>
       </section>
 
