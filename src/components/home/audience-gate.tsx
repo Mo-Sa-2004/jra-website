@@ -1,185 +1,200 @@
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { LocaleSwitcher } from "@/components/layout/locale-switcher";
+import { ORG } from "@/lib/organisation";
 
-type GateImage = { url: string; alt: string } | null;
+type GateVariant = "photo" | "photo-wide" | "seeker";
+
+type GateTile = {
+  key: string;
+  href: string;
+  titleKey: "gateDinerTitle" | "gateMemberTitle" | "gateSeekersTitle";
+  variant: GateVariant;
+  image?: string;
+  imagePosition?: string;
+};
+
+const TILES: GateTile[] = [
+  {
+    key: "foodie",
+    href: "/discover",
+    titleKey: "gateDinerTitle",
+    variant: "photo",
+    image: "/brand/jra-showcase-kitchen.png",
+    imagePosition: "50% 62%",
+  },
+  {
+    key: "business",
+    href: "/for-members",
+    titleKey: "gateMemberTitle",
+    variant: "photo-wide",
+    image: "/brand/jra-showcase-board.png",
+    imagePosition: "50% 32%",
+  },
+  {
+    key: "seekers",
+    href: "/jobs",
+    titleKey: "gateSeekersTitle",
+    variant: "seeker",
+  },
+];
 
 /**
- * Cells without a real photo yet (not every restaurant/supplier has one on
- * file) fall back to a soft wash instead of a flat empty panel — a blank
- * grey square read as broken rather than deliberate. Blue/white/gray is the
- * client's palette for this page specifically (confirmed in the October
- * 2026 client meeting, replacing an earlier blue/white/pink pass once pink
- * was ruled out), not the site's general brand colors, so it stays scoped
- * to the gate rather than bleeding into the rest of the design system.
- * Cycled by index so a run of empty cells in the same tile doesn't read as
- * one flat block.
+ * The homepage's only content: three circular "portal" tiles splitting the
+ * site by audience. Rebuilt in November 2026 to match the unified visual
+ * identity the client's designer, Ibrahim Nassrallah, sent over WhatsApp as
+ * a static demo (JRA-website.zip — index.html + homepage.css) rather than
+ * the earlier rans.ca-style two-card gate this replaces.
+ *
+ * Three overlapping circles rather than two side-by-side cards: Foodie,
+ * an enlarged centered Business, and a new third option, Seekers, that the
+ * reference introduces (job seekers heading straight to SiyahaJobs, rather
+ * than that link living three levels deep in the foodie side's sub-nav as
+ * it used to). The business circle stays visually enlarged and centered
+ * even under Arabic — see the `.gate-portals { direction: ltr }` rule in
+ * globals.css, which is the reference's own deliberate choice, kept for the
+ * same reason: the overlap math is tuned for a fixed left-to-right order,
+ * not a general RTL rule.
+ *
+ * `SiteHeader`/`SiteFooter` already render nothing on "/" (see
+ * site-header.tsx / site-footer.tsx), so this component supplies its own
+ * minimal brand lockup and language switcher — matching the reference's
+ * own standalone header, but reusing the site's real `LocaleSwitcher`
+ * rather than rebuilding a bespoke EN/AR toggle.
+ *
+ * Each circle is one full-bleed photo rather than the previous design's
+ * 6-photo grid. The reference's own Foodie/Business photos
+ * (restaurants.webp / industry.webp) aren't part of this repo, so these use
+ * the real JRA photography already on hand in public/brand instead: the
+ * plated-dish kitchen shot for Foodie, the board/membership photo for
+ * Business. Seekers uses SiyahaJobs' own mark, copied unchanged from the
+ * reference's assets/siyahajobs-symbol.png into
+ * public/brand/siyahajobs-mark.png — it's SiyahaJobs' existing public logo,
+ * not artwork invented for this page.
  */
-const EMPTY_CELL_TINTS = [
-  "bg-gradient-to-br from-blue-100 via-white to-gray-200",
-  "bg-gradient-to-tr from-gray-200 via-white to-blue-100",
-  "bg-gradient-to-b from-blue-50 via-white to-gray-100",
-] as const;
-
-/**
- * The homepage's only content: two tiles splitting the site by audience,
- * built to match rans.ca's own gate — per the client's October 2026
- * direction, literally "copy the exact same design" of
- * https://rans.ca/, in JRA's own colors (blue/white/gray, no pink).
- * `[locale]/page.tsx` renders nothing else.
- *
- * rans.ca's cards are two separate floating cards (real gap between them,
- * each independently rounded and shadowed) rather than one shared strip
- * split by a divider — that's the one deliberate break from the rest of
- * the site's flat, shadow-free card system (see globals.css), kept scoped
- * to this component to match the reference. Each card is a photo with a
- * circular logo seal centered on it (rans.ca uses "DINE NOVA SCOTIA" /
- * "RANS" sub-brand seals; JRA has no equivalent sub-brands, so both tiles
- * use JRA's own icon mark — same logo, not two invented identities), a
- * bold title below the photo, then a row of sub-links.
- *
- * The photo itself is still the 6-cell grid of real member photos (not a
- * single photo like rans.ca) — that was the fix for low-res source photos
- * blurring when stretched full-bleed (see the commit history on this
- * file), and reverting to one photo per card would reopen that problem.
- * The grid still reads as "a wall of real places" under the seal, which is
- * close enough to the reference's intent without the blur risk.
- *
- * Plain next-intl `Link`s throughout, no cookie and no middleware redirect
- * (an earlier version remembered the choice and skipped the gate on return
- * visits — removed because it broke the browser back button). Every visit
- * to "/" shows the gate, and back/forward both behave like any other link.
- *
- * Each tile is two separate link regions: the photo+seal+title opens that
- * audience's homepage, and the three sub-links below it jump straight to a
- * specific page within that side — matching rans.ca's own "Restaurants /
- * Events / Trends" and "Industry / Members / Operations" rows, which are
- * real deep links, not decoration.
- */
-export async function AudienceGate({
-  dinerImages,
-  memberImages,
-}: {
-  dinerImages: GateImage[];
-  memberImages: GateImage[];
-}) {
+export async function AudienceGate() {
   const t = await getTranslations("home");
-  const tNav = await getTranslations("nav");
-
-  const tiles = [
-    {
-      key: "diner",
-      href: "/discover",
-      title: t("gateDinerTitle"),
-      images: dinerImages,
-      links: [
-        { label: tNav("restaurants"), href: "/restaurants" },
-        { label: tNav("news"), href: "/news" },
-        { label: t("siyahaJobs"), href: "/jobs" },
-      ],
-    },
-    {
-      key: "member",
-      href: "/for-members",
-      title: t("gateMemberTitle"),
-      images: memberImages,
-      links: [
-        { label: tNav("membership"), href: "/membership" },
-        { label: tNav("suppliers"), href: "/suppliers" },
-        { label: tNav("training"), href: "/training" },
-      ],
-    },
-  ] as const;
+  const tFooter = await getTranslations("footer");
+  const tCommon = await getTranslations("common");
 
   return (
-    <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center bg-gradient-to-br from-blue-50 via-white to-gray-100">
-      <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 md:px-8">
-        <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          {t("gateKicker")}
-        </p>
-        <h1 className="mt-2 text-center font-editorial text-[clamp(1.6rem,3.5vw,2.25rem)] font-semibold leading-tight text-ink rtl:font-display">
-          {t("gateTitle")}
-        </h1>
+    <div className="gate-page relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-white">
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        className="gate-corner gate-corner-top"
+        viewBox="0 0 800 440"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="gate-corner-top" x1="0" y1="0" x2="1" y2="1">
+            <stop stopColor="#003f7a" />
+            <stop offset=".5" stopColor="#0053a0" />
+            <stop offset="1" stopColor="#6fb4ec" />
+          </linearGradient>
+        </defs>
+        <path d="M0 0H590C330 75 125 170 0 340Z" fill="url(#gate-corner-top)" />
+        <path d="M0 318C170 122 340 65 590 0H545C285 58 120 165 0 300Z" fill="#fff" />
+        <path d="M0 300C140 120 300 50 440 0H350C195 70 75 180 0 280Z" fill="#6fb4ec" fillOpacity=".4" />
+      </svg>
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        className="gate-corner gate-corner-bottom"
+        viewBox="0 0 800 440"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="gate-corner-bottom" x1="0" y1="0" x2="1" y2="1">
+            <stop stopColor="#003f7a" />
+            <stop offset=".5" stopColor="#0053a0" />
+            <stop offset="1" stopColor="#6fb4ec" />
+          </linearGradient>
+        </defs>
+        <path d="M0 0H590C330 75 125 170 0 340Z" fill="url(#gate-corner-bottom)" />
+        <path d="M0 318C170 122 340 65 590 0H545C285 58 120 165 0 300Z" fill="#fff" />
+        <path d="M0 300C140 120 300 50 440 0H350C195 70 75 180 0 280Z" fill="#6fb4ec" fillOpacity=".4" />
+      </svg>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
-          {tiles.map(({ key, href, title, images, links }) => {
-            const cells: GateImage[] = Array.from({ length: 6 }, (_, i) => images[i] ?? null);
-            return (
-              <div
-                key={key}
-                className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-xl shadow-blue-950/10 ring-1 ring-black/5 transition-transform duration-300 hover:-translate-y-1"
-              >
-                <Link href={href} className="group block overflow-hidden">
-                  {/* Full-color photo grid, no wash — a faded, veiled version
-                      of real member photos looked worse than the blur it
-                      was meant to fix. The title gets its own plain block
-                      below instead of fighting the photos for contrast.
-                      `relative` lives on this wrapper, not the outer Link,
-                      so the seal below centers on the photo area only —
-                      not the title text underneath it too. */}
-                  <div className="relative">
-                    <div className="grid h-[180px] grid-cols-3 grid-rows-2 gap-px overflow-hidden bg-gray-200 sm:h-[220px]">
-                      {cells.map((_image, i) => (
-                        // Real member photos are temporarily suppressed here
-                        // per the client's "keep the squares empty for now"
-                        // direction -- every cell renders the tint
-                        // placeholder regardless of whether a photo exists.
-                        // Re-enable by restoring the `image ? <Image .../>`
-                        // branch this replaced.
-                        <div
-                          key={i}
-                          className={`relative overflow-hidden ${EMPTY_CELL_TINTS[i % EMPTY_CELL_TINTS.length]}`}
-                        />
-                      ))}
-                    </div>
+      {/* Visually hidden — the circles below carry the visible content, but
+          the page still needs a real heading for screen readers and SEO. */}
+      <h1 className="sr-only">{tCommon("associationName")}</h1>
 
-                    {/* Circular seal, centered over the photo — rans.ca's
-                        own composition (a round sub-brand badge over the
-                        hero photo). `jra-mark.png` itself is a tight crop
-                        of just the swirl's right lobe (used elsewhere as a
-                        small favicon-style mark), so it read as cut off
-                        here. `jra-mark-full.png` is the complete swirl,
-                        cropped out of the wordmark lockup (`jra-logo.png`)
-                        with the "JRA | Jordan Restaurant Association" text
-                        dropped — the full icon, no words. */}
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                      <div className="relative h-16 w-16 rounded-full bg-white p-3 shadow-md ring-1 ring-black/5 sm:h-20 sm:w-20">
-                        <Image
-                          src="/brand/jra-mark-full.png"
-                          alt=""
-                          fill
-                          sizes="80px"
-                          className="object-contain"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <p className="px-3 pb-1 pt-4 text-center font-display text-lg font-bold text-ink sm:text-xl md:text-2xl">
-                    {title}
-                  </p>
-                </Link>
-
-                <nav
-                  aria-label={title}
-                  className="flex flex-1 items-center justify-center gap-1.5 border-t border-gray-100 px-2 py-3 text-center sm:gap-2.5 sm:py-4"
-                >
-                  {links.map((link, i) => (
-                    <span key={link.href} className="flex items-center gap-1.5 sm:gap-2.5">
-                      {i > 0 ? <span className="text-gray-300" aria-hidden="true">|</span> : null}
-                      <Link
-                        href={link.href}
-                        className="text-[11px] font-semibold text-ink-soft transition-colors hover:text-accent sm:text-xs"
-                      >
-                        {link.label}
-                      </Link>
-                    </span>
-                  ))}
-                </nav>
-              </div>
-            );
-          })}
-        </div>
+      <div className="absolute end-4 top-4 z-20 sm:end-6 sm:top-5">
+        <LocaleSwitcher />
       </div>
+
+      <header className="relative z-10 flex shrink-0 items-center justify-center py-7 sm:py-9">
+        <Image
+          src={ORG.brand.logo}
+          alt=""
+          width={240}
+          height={46}
+          priority
+          className="h-14 w-auto sm:h-[72px]"
+        />
+      </header>
+
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-10 sm:px-6">
+        <div className="gate-portals flex w-full max-w-[1400px] flex-col items-center gap-7 sm:flex-row sm:gap-0">
+          {TILES.map((tile) => (
+            <div key={tile.key} className={`gate-orbit gate-orbit-${tile.key}`}>
+              <span aria-hidden="true" className="gate-orbit-ring">
+                <svg viewBox="0 0 100 100" focusable="false">
+                  <defs>
+                    <linearGradient id={`gate-ring-${tile.key}`} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stopColor="#0053a0" stopOpacity=".12" />
+                      <stop offset=".5" stopColor="#0053a0" />
+                      <stop offset="1" stopColor="#6fb4ec" stopOpacity=".5" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    className="gate-orbit-arc"
+                    d="M50 0A50 50 0 0 1 93.301 75M25 93.301A50 50 0 0 1 0 50"
+                    stroke={`url(#gate-ring-${tile.key})`}
+                  />
+                </svg>
+              </span>
+
+              <Link href={tile.href} className={`gate-portal gate-portal-${tile.variant}`}>
+                {tile.variant === "seeker" ? (
+                  <span className="gate-portal-seeker-mark">
+                    <Image
+                      src="/brand/siyahajobs-mark.png"
+                      alt=""
+                      fill
+                      sizes="180px"
+                      className="object-contain"
+                    />
+                  </span>
+                ) : (
+                  <Image
+                    src={tile.image!}
+                    alt=""
+                    fill
+                    sizes="(min-width: 640px) 32vw, 80vw"
+                    className="gate-portal-photo"
+                    style={{ objectPosition: tile.imagePosition }}
+                  />
+                )}
+                <span className="gate-portal-scrim" aria-hidden="true" />
+                <span className="gate-portal-copy">
+                  <h2 className="gate-portal-title">{t(tile.titleKey)}</h2>
+                  <span className="gate-portal-arrow" aria-hidden="true">
+                    <ArrowRight className="h-5 w-5 rtl:-scale-x-100" strokeWidth={1.8} />
+                  </span>
+                </span>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <footer className="relative z-10 shrink-0 pb-8 pt-2 text-center text-xs text-ink-faint">
+        © {new Date().getFullYear()} {tFooter("legalName")}. {tFooter("rights")}
+      </footer>
     </div>
   );
 }

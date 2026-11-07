@@ -872,3 +872,232 @@ input[type="range"]:focus-visible {
   border-color: var(--color-ink-faint);
   cursor: pointer;
 }
+
+/* ---------------------------------------------------------------------- */
+/* Audience gate — orbital portals (see audience-gate.tsx)                 */
+/*                                                                         */
+/* Three overlapping circular tiles, adapted from Ibrahim Nassrallah's     */
+/* November 2026 unified-identity reference (homepage.css in the          */
+/* JRA-website.zip demo he sent). Everything here is scoped with a         */
+/* `gate-` prefix and used nowhere outside audience-gate.tsx, so it can    */
+/* diverge freely from the rest of the design system's flat, shadow-free   */
+/* card language — this page is a deliberate, self-contained exception,    */
+/* same as the rest of the site treats it.                                 */
+/* ---------------------------------------------------------------------- */
+
+:root {
+  --gate-portal-size: min(400px, 27vw, calc((100svh - 230px) / 1.3));
+}
+
+.gate-corner {
+  position: absolute;
+  width: clamp(190px, 38vw, 720px);
+  height: clamp(160px, 30vw, 400px);
+  z-index: 0;
+  pointer-events: none;
+}
+.gate-corner-top {
+  top: 0;
+  left: 0;
+}
+.gate-corner-bottom {
+  bottom: 0;
+  right: 0;
+  transform: rotate(180deg);
+}
+
+/* Fixed left-to-right order in both languages — the business circle's
+   overlap is tuned for this order; see the component's doc comment. */
+.gate-portals {
+  direction: ltr;
+}
+
+.gate-orbit {
+  position: relative;
+  flex: 0 0 var(--gate-portal-size);
+  width: var(--gate-portal-size);
+  height: var(--gate-portal-size);
+}
+.gate-orbit + .gate-orbit {
+  margin-left: calc(var(--gate-portal-size) * -0.06);
+}
+.gate-orbit-business {
+  flex-basis: calc(var(--gate-portal-size) * 1.22);
+  width: calc(var(--gate-portal-size) * 1.22);
+  height: calc(var(--gate-portal-size) * 1.22);
+  z-index: 2;
+}
+
+.gate-portal {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--color-accent);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-canvas-deep);
+  box-shadow: 0 15px 35px rgb(0 83 160 / 0.2);
+  text-decoration: none;
+  transition:
+    transform var(--dur-slow) var(--ease-editorial),
+    box-shadow var(--dur-slow) var(--ease-editorial);
+}
+.gate-portal-seeker {
+  background: #fff;
+}
+
+.gate-portal-photo {
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease-editorial);
+}
+
+.gate-portal-seeker-mark {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  width: 42%;
+  aspect-ratio: 1 / 1;
+  transform: translateX(-50%);
+}
+
+.gate-portal-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 32%, rgb(2 57 103 / 0.5) 55%, rgb(2 41 78 / 0.92) 100%);
+  pointer-events: none;
+}
+.gate-portal-seeker .gate-portal-scrim {
+  background: linear-gradient(
+    180deg,
+    transparent 46%,
+    rgb(7 59 105 / 0.75) 62%,
+    rgb(3 55 93 / 0.94) 78%,
+    #033457 100%
+  );
+}
+
+.gate-portal-copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 18px 9%;
+  gap: 14px;
+  text-align: center;
+}
+
+.gate-portal-title {
+  margin: 0;
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 1vw + 0.85rem, 1.7rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 0.35);
+}
+[dir="rtl"] .gate-portal-title {
+  font-family: var(--font-display-ar), sans-serif;
+}
+
+.gate-portal-arrow {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-accent);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.22);
+  transition: background var(--dur-slow) var(--ease-editorial);
+}
+.gate-portal-arrow svg {
+  transition: transform var(--dur-slow) var(--ease-editorial);
+}
+
+@media (hover: hover) {
+  .gate-portal:hover {
+    transform: scale(1.025);
+    box-shadow: 0 20px 44px rgb(0 63 122 / 0.28);
+    z-index: 5;
+  }
+  .gate-portal:hover .gate-portal-photo {
+    transform: scale(1.025);
+  }
+  .gate-portal:hover .gate-portal-arrow {
+    background: var(--color-accent-soft);
+  }
+  .gate-portal:hover .gate-portal-arrow svg {
+    transform: translateX(3px);
+  }
+  [dir="rtl"] .gate-portal:hover .gate-portal-arrow svg {
+    transform: translateX(-3px);
+  }
+}
+
+.gate-portal:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 5px;
+  z-index: 6;
+}
+
+/* Rotating ring decoration, parked behind each circle. Purely ornamental —
+   frozen by the global prefers-reduced-motion rule above (C5), which
+   collapses every animation-duration to near-zero, not by a local
+   override here. */
+.gate-orbit-ring {
+  position: absolute;
+  inset: -9px;
+  z-index: -1;
+  pointer-events: none;
+  animation: gate-orbit-turn 22s linear infinite;
+  filter: drop-shadow(0 0 2px rgb(0 83 160 / 0.18));
+}
+.gate-orbit-business .gate-orbit-ring {
+  inset: -14px;
+  animation-duration: 28s;
+}
+.gate-orbit-ring svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.gate-orbit-arc {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+@keyframes gate-orbit-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --gate-portal-size: min(280px, 72vw);
+  }
+  .gate-orbit + .gate-orbit {
+    margin-left: 0;
+  }
+  .gate-orbit-business {
+    flex-basis: auto;
+  }
+  .gate-corner {
+    width: 160px;
+    height: 130px;
+  }
+  .gate-portal {
+    border-width: 3px;
+  }
+  .gate-portal-title {
+    font-size: 1.4rem;
+  }
+}
