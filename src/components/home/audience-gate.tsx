@@ -22,16 +22,16 @@ const TILES: GateTile[] = [
     href: "/discover",
     titleKey: "gateDinerTitle",
     variant: "photo",
-    image: "/brand/jra-showcase-kitchen.png",
-    imagePosition: "50% 62%",
+    image: "/brand/gate-foodie.webp",
+    imagePosition: "50% 75%",
   },
   {
     key: "business",
     href: "/for-members",
     titleKey: "gateMemberTitle",
     variant: "photo-wide",
-    image: "/brand/jra-showcase-board.png",
-    imagePosition: "50% 32%",
+    image: "/brand/gate-business.webp",
+    imagePosition: "52% 65%",
   },
   {
     key: "seekers",
@@ -65,14 +65,13 @@ const TILES: GateTile[] = [
  * rather than rebuilding a bespoke EN/AR toggle.
  *
  * Each circle is one full-bleed photo rather than the previous design's
- * 6-photo grid. The reference's own Foodie/Business photos
- * (restaurants.webp / industry.webp) aren't part of this repo, so these use
- * the real JRA photography already on hand in public/brand instead: the
- * plated-dish kitchen shot for Foodie, the board/membership photo for
- * Business. Seekers uses SiyahaJobs' own mark, copied unchanged from the
- * reference's assets/siyahajobs-symbol.png into
- * public/brand/siyahajobs-mark.png — it's SiyahaJobs' existing public logo,
- * not artwork invented for this page.
+ * 6-photo grid. Foodie and Business use the exact photos from the
+ * reference's own assets/ folder (restaurants.webp, industry.webp — the
+ * client confirmed these are the ones to use), copied unchanged into
+ * public/brand/gate-foodie.webp and public/brand/gate-business.webp.
+ * Seekers uses SiyahaJobs' own mark, copied the same way from
+ * assets/siyahajobs-symbol.png into public/brand/siyahajobs-mark.png — it's
+ * SiyahaJobs' existing public logo, not artwork invented for this page.
  */
 export async function AudienceGate() {
   const t = await getTranslations("home");
