@@ -111,6 +111,17 @@ function MobileNav({
  * That "way back" is an explicit, always-visible button rather than relying
  * on the logo being clickable — the logo still links to "/" too, but a
  * labeled control is what the client asked for.
+ *
+ * `AccountMenu` rides along here too. It used to live only in the full,
+ * un-split header below, which made sense back when every page shared one
+ * header -- but once the gate split this slim header onto every page each
+ * gate's nav links to (effectively the whole public site), that left no
+ * reachable "Log In" anywhere: the full header only still renders on
+ * orphaned utility pages (admin, portal, login, contact, legal) that
+ * nothing links to either. Signed-out it's just the compact "Log In" pill,
+ * so it sits comfortably next to the language switcher at every width this
+ * header supports, mobile included -- no need for the separate `compact`
+ * variant the full header's slide-down mobile panel uses.
  */
 function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" | "jobs" }) {
   const t = useTranslations();
@@ -158,6 +169,7 @@ function GateSectionHeader({ audience }: { audience: "discover" | "forMembers" |
             </a>
           ) : null}
           <LocaleSwitcher />
+          <AccountMenu />
           {categories.length > 0 ? (
             <button
               type="button"
